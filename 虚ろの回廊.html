@@ -446,7 +446,7 @@ function useSel(){if(state!=='play'||(hidden&&sel!==2&&sel!==5))return;if(!cnts(
 addEventListener('wheel',e=>{if(state==='play'){sel=(sel+(e.deltaY>0?1:5))%6;renderBar()}},{passive:true});
 $('c').addEventListener('mousedown',e=>{if(e.button===0&&document.pointerLockElement===$('c'))useSel()});
 let TOUCH=matchMedia('(pointer:coarse)').matches||(!matchMedia('(any-pointer:fine)').matches&&(navigator.maxTouchPoints>0||'ontouchstart' in window));const joy={x:0,y:0},touchOn=()=>TOUCH||OPT.touchUI;
-function showTouch(){document.body.classList.toggle('touch',touchOn());$('tc').classList.toggle('hide',!(touchOn()&&state==='play'))}
+function showTouch(){document.body.classList.toggle('touch',touchOn());$('tc').classList.toggle('hide',!(touchOn()&&(state==='play'||state==='paused')))}
 addEventListener('touchstart',()=>{if(!TOUCH&&!matchMedia('(any-pointer:fine)').matches){TOUCH=true;showTouch()}},{passive:true});showTouch();
 {const c=$('c');let lookId=null,lx=0,ly=0;
  c.addEventListener('touchstart',e=>{for(const t of e.changedTouches)if(lookId===null){lookId=t.identifier;lx=t.clientX;ly=t.clientY}},{passive:true});
@@ -638,8 +638,12 @@ function cullDeco(){if(cf++&7)return;const G=world&&world.userData.deco;if(!G)re
 let pauseAt=0;
 function lockPtr(){try{const r=$('c').requestPointerLock&&$('c').requestPointerLock();if(r&&r.catch)r.catch(()=>{})}catch(e){}}
 function clearKeys(){Object.keys(keys).forEach(k=>keys[k]=false);joy.x=joy.y=0}
+function wakeAudio(){if(AC&&AC.state!=='running'&&state!=='paused'){try{const p=AC.resume();if(p&&p.catch)p.catch(()=>{})}catch(e){}}}
+['touchend','pointerup','mouseup','click','keydown'].forEach(t=>addEventListener(t,wakeAudio,{capture:true,passive:true}));
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)wakeAudio()});
+setInterval(wakeAudio,1500);
 function pauseGame(){if(state!=='play')return;state='paused';pauseAt=performance.now();clearKeys();$('pause').classList.remove('hide');document.exitPointerLock&&document.exitPointerLock();if(AC&&AC.state==='running')AC.suspend()}
-function resumeGame(){if(state!=='paused')return;const d=performance.now()-pauseAt;tStart+=d;runStart+=d;$('pause').classList.add('hide');if(AC)AC.resume();clearKeys();state='play';lockPtr()}
+function resumeGame(){if(state!=='paused')return;const d=performance.now()-pauseAt;tStart+=d;runStart+=d;$('pause').classList.add('hide');if(AC)AC.resume();clearKeys();state='play';showTouch();wakeAudio();lockPtr()}
 document.addEventListener('pointerlockchange',()=>{if(document.pointerLockElement!==$('c')&&state==='play')pauseGame()});
 document.addEventListener('visibilitychange',()=>{if(document.hidden)pauseGame()});
 addEventListener('blur',()=>pauseGame());
