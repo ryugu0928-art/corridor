@@ -154,7 +154,7 @@ button{-webkit-tap-highlight-color:transparent}
 #mp-codes{display:flex;flex-direction:column;align-items:center}
 #mp-bin{order:1}#mp-bout{order:2}
 #mp-v-room.host #mp-bin{order:2}#mp-v-room.host #mp-bout{order:1}
-#mp .btn:disabled{opacity:.35;cursor:default;box-shadow:none}
+#mpscr .btn:disabled{opacity:.35;cursor:default;box-shadow:none}
 /* ---- Touch layout (hidden on PC unless enabled in settings) ---- */
 body.touch{--bw:clamp(46px,14vmin,72px)}
 #joy{background:radial-gradient(circle,rgba(201,191,176,.10) 0 30%,transparent 31%),rgba(5,4,4,.35)}
@@ -203,7 +203,7 @@ body.touch #hud{bottom:auto;top:calc(36px + env(safe-area-inset-top,0px));left:m
 <div id="bar" class="hide"><div class="slot"><i>1</i><svg viewBox="0 0 24 24"><path d="M5 16l2-6 5-3 6 3 1 6-4 3H9z"/><path d="M9 12l3 2 3-3"/></svg><b>小石</b><span class="n" id="stn">3</span></div><div class="slot"><i>2</i><svg viewBox="0 0 24 24"><rect x="7" y="3" width="10" height="18" rx="1"/><path d="M10 8h4M10 12h4M10 16h2"/></svg><b id="crd">なし</b></div><div class="slot"><i>3</i><svg viewBox="0 0 24 24"><circle cx="12" cy="9" r="6"/><path d="M12 15v7M10 22h4M9 7a4 4 0 0 1 3-2"/></svg><b>手鏡</b><span class="n" id="mir">0</span></div><div class="slot"><i>4</i><svg viewBox="0 0 24 24"><rect x="9" y="8" width="6" height="13" rx="1"/><path d="M12 8V5l2-2M16 3l1 1M10 14h4"/></svg><b>爆竹</b><span class="n" id="ck">0</span></div><div class="slot"><i>5</i><svg viewBox="0 0 24 24"><circle cx="12" cy="11" r="7"/><path d="M8 20h8l-1-3H9zM8.5 9a4 4 0 0 1 3-3"/></svg><b>水晶玉</b><span class="n" id="ob">0</span></div><div class="slot"><i>6</i><svg viewBox="0 0 24 24"><path d="M4 6l5-2 6 2 5-2v14l-5 2-6-2-5 2z"/><path d="M9 4v14M15 6v14"/></svg><b>地図</b><span class="n" id="mp">0</span></div></div>
 <div class="scr hide" id="pause" role="dialog" aria-label="一時停止"><h1>一時停止</h1><p>Esc または P で再開できます。</p><div><button class="btn" id="pres">再開</button><button class="btn sub" id="pset">設定</button><button class="btn sub" id="ptit">タイトルへ</button></div></div>
 <div class="scr hide" id="set" role="dialog" aria-label="設定"><h1>設定</h1><div id="rows"></div><p>変更はすぐに反映され、このブラウザに保存されます。</p><div><button class="btn sub" id="rst">初期値に戻す</button><button class="btn" id="cls">閉じる</button></div></div>
-<div class="scr hide" id="mp" role="dialog" aria-label="マルチプレイ"><h1>マルチプレイ</h1><p class="mpn">同じWi‑Fi内の端末どうしで遊べます（2〜4人）。サーバーは使いません。</p>
+<div class="scr hide" id="mpscr" role="dialog" aria-label="マルチプレイ"><h1>マルチプレイ</h1><p class="mpn">同じWi‑Fi内の端末どうしで遊べます（2〜4人）。サーバーは使いません。</p>
 <div id="mp-v-menu"><div class="mprow"><label for="mp-name">名前</label><input class="mpi" id="mp-name" maxlength="8" placeholder="プレイヤー" autocomplete="off"></div><div><button class="btn" id="mp-host">部屋を作る</button><button class="btn" id="mp-join">部屋に参加</button></div></div>
 <div id="mp-v-room" class="hide"><div id="mp-list"></div><div class="mp-h hide"><button class="btn sub" id="mp-inv">参加者を追加</button></div>
 <div id="mp-codes"><div id="mp-bin"><label class="mpl" id="mp-l-in" for="mp-in">受け取ったコード</label><textarea class="mpt" id="mp-in" rows="3" spellcheck="false" autocomplete="off" autocapitalize="off"></textarea><div><button class="btn sub" id="mp-paste">貼り付け</button><button class="btn sub" id="mp-act">接続</button></div></div>
@@ -355,7 +355,7 @@ function start(keep){NEED=[4,4,5,5,6][stg-1]*(MP.inGame?PN:1);const sb=P.bat,ss=
  const dirs=[[0,-1],[1,0],[0,1],[-1,0]];if(MP.inGame){ent.visible=false;rng=Math.random;mpSpawnAvatars()}state='play';say('第'+stg+'回廊 — '+IN()+'を'+NEED+IC()+'、集めろ（赤い'+IN()+'は罠だが報酬がある）',5000);}
 function die(){if(state!=='play'||MP.inGame)return;if(card==='decoy'){card=null;showCard();let c;do{c=free()}while(Math.hypot(c[0]*CS-P.x,c[1]*CS-P.z)<30&&Math.random()<.9);E.x=c[0]*CS;E.z=c[1]*CS;eMode='wander';eTarget=null;eAct=null;aware=0;hideT=0;burst(.8,.7,3000,0,.5);tone(300,0,1,.3,'square',60,.5);say('身代わりの札が砕けた…',3000);return}state='dead';$('flash').style.opacity=1;hidden=false;$('hideov').classList.add('hide');hush();burst(1.4,.9,7000,0,.5);tone(1100,0,1.1,.3,'sawtooth',140,.5);tone(1170,0,1.1,.25,'sawtooth',150,.5);tone(90,0,1.6,.6,'square',35,.4);
  const dx=E.x-P.x,dz=E.z-P.z;P.yaw=Math.atan2(-dx,-dz);P.pitch=.35;
- setTimeout(()=>{if(state==='dead'&&!MP.fin)mpGoSpec('喰われた')},1300)}
+ setTimeout(()=>{$('flash').style.opacity=0;$('et').textContent='喰われた';$('ed').textContent=IN()+' '+got+'/'+NEED+' — 「それ」は今もそこにいる。';endBtns(1,0,1);$('end').classList.remove('hide');document.exitPointerLock&&document.exitPointerLock()},1300)}
 function interact(){if(hidden){hidden=false;$('hideov').classList.add('hide');P.x=hidePrev.x;P.z=hidePrev.z;tone(200,0,.15,.1,'square',150);return}
  const l=lockers.find(l=>Math.hypot(l.cx-P.x,l.cz-P.z)<2.2);if(!l)return;
  hidden=true;hideT=0;hidePrev={x:l.cx,z:l.cz};P.x=l.x;P.z=l.z;P.yaw=Math.atan2(l.x-l.cx,l.z-l.cz);P.pitch=0;$('hideov').classList.remove('hide');tone(160,0,.2,.15,'square',110);
@@ -718,7 +718,7 @@ function mpDraw(){const box=$('mp-list');box.innerHTML='';for(let i=0;i<4;i++){c
 function mpSendAll(o){const s=JSON.stringify(o);Object.values(MP.peers).forEach(p=>{if(p.dc&&p.dc.readyState==='open')p.dc.send(s)})}
 function mpBroadcastRoster(){mpDraw();mpPrune();mpSendAll({k:'roster',r:MP.roster})}
 function mpHostWire(dc,pc,slot){dc.onmessage=e=>{let m;try{m=JSON.parse(e.data)}catch(_){return}
- if(m.k==='hi'){if(MP.started){dc.send(JSON.stringify({k:'busy'}));return}if(MP.roster.length>=4){dc.send(JSON.stringify({k:'full'}));return}let id=1;while(MP.roster.some(p=>p.id===id))id++;const name=String(m.n||'プレイヤー').slice(0,8);MP.roster.push({id,name,ping:null});MP.peers[id]={dc,pc};slot.id=id;if(MP.pend&&MP.pend.pc===pc)MP.pend=null;dc.send(JSON.stringify({k:'welcome',id,r:MP.roster}));mpBroadcastRoster();mpSay(name+'が参加しました');$('mp-out').value='';$('mp-in').value=''}
+ if(m.k==='hi'){if(slot.id)return;if(MP.started){dc.send(JSON.stringify({k:'busy'}));return}if(MP.roster.length>=4){dc.send(JSON.stringify({k:'full'}));return}let id=1;while(MP.roster.some(p=>p.id===id))id++;const name=String(m.n||'プレイヤー').slice(0,8);MP.roster.push({id,name,ping:null});MP.peers[id]={dc,pc};slot.id=id;if(MP.pend&&MP.pend.pc===pc)MP.pend=null;dc.send(JSON.stringify({k:'welcome',id,r:MP.roster}));mpBroadcastRoster();mpSay(name+'が参加しました');$('mp-out').value='';$('mp-in').value=''}
  else if(m.k==='q'&&slot.id){const p=MP.roster.find(x=>x.id===slot.id);if(p)p.ping=Math.round(performance.now()-m.t)}
  else if(m.k==='cl'&&slot.id)mpHostClaim(slot.id,m.t,m.i)
  else if(m.k==='ev'&&slot.id&&typeof m.t==='string')mpHostEv(slot.id,m)
@@ -734,7 +734,7 @@ async function mpAccept(){const p=MP.pend;if(!p){mpSay('先に「参加者を追
  try{const m=mpDec($('mp-in').value);if(m.k!=='a')throw new Error('返信コードではありません');await p.pc.setRemoteDescription(m.d);mpSay('接続中…')}catch(e){mpSay('接続できません: '+e.message)}}
 async function mpGuestMake(){try{const m=mpDec($('mp-in').value);if(m.k!=='o')throw new Error('ホストのコードではありません');
  if(MP.hostPc){try{MP.hostPc.close()}catch(_){}}
- const pc=mpPc();MP.hostPc=pc;pc.ondatachannel=e=>{const dc=e.channel;MP.hostDc=dc;dc.onopen=()=>dc.send(JSON.stringify({k:'hi',n:mpName()}));dc.onmessage=mpGuestMsg;dc.onclose=mpGuestLost;if(dc.readyState==='open')dc.onopen()};
+ const pc=mpPc();MP.hostPc=pc;pc.ondatachannel=e=>{const dc=e.channel;MP.hostDc=dc;let hiSent=false;dc.onopen=()=>{if(hiSent)return;hiSent=true;dc.send(JSON.stringify({k:'hi',n:mpName()}))};dc.onmessage=mpGuestMsg;dc.onclose=mpGuestLost;if(dc.readyState==='open')dc.onopen()};
  await pc.setRemoteDescription(m.d);await pc.setLocalDescription(await pc.createAnswer());await mpIce(pc);$('mp-out').value=mpEnc({k:'a',d:pc.localDescription});mpSay('返信コードをコピーしてホストに渡してください。接続されると自動で部屋が表示されます')}catch(e){mpSay('失敗しました: '+e.message)}}
 function mpGuestMsg(e){let m;try{m=JSON.parse(e.data)}catch(_){return}
  if(m.k==='welcome'){MP.id=m.id;MP.roster=m.r;MP.started=false;mpDraw();mpSay('参加しました。ホストの開始を待っています')}
@@ -855,7 +855,7 @@ function mpCaptured(idx){if(state==='paused'){$('pause').classList.add('hide');s
  if(card==='decoy'){card=null;showCard();burst(.8,.7,3000,0,.5);tone(300,0,1,.3,'square',60,.5);say('身代わりの札が砕けた…',3000);mpEv({t:'sv',e:idx});return}
  state='dead';mpEv({t:'dd'});$('flash').style.opacity=1;hidden=false;$('hideov').classList.add('hide');hush();burst(1.4,.9,7000,0,.5);tone(1100,0,1.1,.3,'sawtooth',140,.5);tone(1170,0,1.1,.25,'sawtooth',150,.5);tone(90,0,1.6,.6,'square',35,.4);
  const q=MP.en[idx];if(q){P.yaw=Math.atan2(-(q[0]-P.x),-(q[1]-P.z));P.pitch=.35}
- setTimeout(()=>{$('flash').style.opacity=0;$('et').textContent='喰われた';$('ed').textContent=IN()+' '+got+'/'+NEED+' — 仲間はまだ逃げている。（観戦は後の段階で実装します）';endBtns(0,0,0);$('end').classList.remove('hide');document.exitPointerLock&&document.exitPointerLock()},1300)}
+ setTimeout(()=>{if(state==='dead'&&!MP.fin)mpGoSpec('喰われた')},1300)}
 function mpNear(){if(!MP.en.length)return;let bi=0,bd=1e9;MP.en.forEach((q,i)=>{const d=Math.hypot(q[0]-P.x,q[1]-P.z);if(d<bd){bd=d;bi=i}});const q=MP.en[bi];E.x=q[0];E.z=q[1];eHead=q[2];eMode=q[3]?'chase':'wander';eAct=q[4]?{t:1}:null;NEARSPD=q[5]}
 function mpFreezeVis(on){const th=THEMES[stg-1];MP.enM.forEach(g=>{const lt=g.children.find(c=>c.isLight);if(lt)lt.color.set(on?0x80c0ff:th.el)});const e=ent&&ent.children[2];if(e)e.material.color.set(on?0x80c0ff:th.eye)}
 function mpEnApply(a,w){if(!MP.inGame||!world||!Array.isArray(a))return;MP.en=a;if(w&&state==='play')aware=w[MP.id]||0;
@@ -894,7 +894,7 @@ function mpTick(dt){if(!MP.inGame||!world)return;MP.tt+=dt;const host=MP.role===
  for(let i=0;i<MP.enM.length;i++){const g=MP.enM[i],u=g.userData;if(!u.init)continue;g.position.x+=(u.tx-g.position.x)*k;g.position.z+=(u.tz-g.position.z)*k;g.rotation.y+=(((u.th-g.rotation.y+Math.PI*3)%(Math.PI*2))-Math.PI)*k;g.children[0].rotation.z=Math.sin(T*3+i)*.05;g.position.y=MP.fz?0:Math.abs(Math.sin(T*6+i))*.04;const lt=u.lt||(u.lt=g.children.find(c=>c.isLight));if(lt)lt.intensity=.3+Math.random()*.4}}
 function mpBegin(o){MP.taken={};MP.esc={};MP.started=true;MP.inGame=true;MP.seed=o.seed>>>0;MP.roster=o.r;PN=o.n;MP.snap={};MP.av={};MP.tt=0;
  audioInit();if(AC.state==='suspended')AC.resume();
- $('mp').classList.add('hide');$('start').classList.remove('intro');$('start').classList.add('hide');$('end').classList.add('hide');
+ $('mpscr').classList.add('hide');$('start').classList.remove('intro');$('start').classList.add('hide');$('end').classList.add('hide');
  if(tg)tg.visible=false;scene.fog.density=.1;$('mode-tag').classList.remove('hide');$('bar').classList.remove('hide');
  stg=o.stg;total=0;totN=0;totU=0;retries=0;runStart=performance.now();start(false);showTouch();lockPtr()}
 function mpEnd(msg){if(!MP.inGame)return;MP.inGame=false;PN=1;MP.av={};MP.snap={};if(MP.role)mpLeave(msg||'')}
@@ -902,13 +902,13 @@ function mpRole(r){MP.role=r;const h=r==='host';$('mp-v-room').classList.toggle(
 function mpHost(){MP.id=0;MP.roster=[{id:0,name:mpName(),ping:null}];MP.started=false;mpRole('host');mpSay('「参加者を追加」を押すと、ゲストに渡すコードを作ります');clearInterval(MP.iv);MP.iv=setInterval(()=>{if(MP.role==='host'&&Object.keys(MP.peers).length){mpSendAll({k:'p',t:performance.now()});mpBroadcastRoster()}},3000)}
 function mpJoin(){MP.id=-1;MP.roster=[];MP.started=false;mpRole('guest');mpSay('ホストのコードを貼り付けて「返信コードを作る」を押してください')}
 function mpLeave(msg){const wasIn=MP.inGame;MP.leaving=true;clearInterval(MP.iv);Object.values(MP.peers).forEach(p=>{try{p.dc.send(JSON.stringify({k:'bye'}))}catch(_){}setTimeout(()=>{try{p.pc.close()}catch(_){}},200)});[MP.pend&&MP.pend.pc,MP.hostPc].forEach(pc=>{if(pc)try{pc.close()}catch(_){}});MP.role=null;MP.fin=null;MP.spec=null;MP.id=-1;MP.peers={};MP.roster=[];MP.pend=null;MP.hostDc=null;MP.hostPc=null;MP.started=false;$('mp-out').value='';$('mp-in').value='';$('mp-back').textContent='戻る';mpView('menu');mpSay(msg||'');MP.leaving=false;if(wasIn){MP.inGame=false;PN=1;MP.av={};MP.snap={};toTitle();say(msg||'マルチプレイを終了しました',4000)}}
-$('mpb').addEventListener('click',()=>{$('start').classList.add('hide');$('mp').classList.remove('hide');mpView('menu');const ok=typeof RTCPeerConnection!=='undefined';$('mp-host').disabled=$('mp-join').disabled=!ok;mpSay(ok?'':'このブラウザは対応していません（WebRTCが使えません）')});
+$('mpb').addEventListener('click',()=>{$('start').classList.add('hide');$('mpscr').classList.remove('hide');mpView('menu');const ok=typeof RTCPeerConnection!=='undefined';$('mp-host').disabled=$('mp-join').disabled=!ok;mpSay(ok?'':'このブラウザは対応していません（WebRTCが使えません）')});
 $('mp-host').addEventListener('click',mpHost);$('mp-join').addEventListener('click',mpJoin);$('mp-inv').addEventListener('click',mpInvite);
 $('mp-act').addEventListener('click',()=>MP.role==='host'?mpAccept():mpGuestMake());
 $('mp-start').addEventListener('click',()=>{if(MP.role!=='host'||MP.roster.length<2||MP.started)return;const o={k:'start',n:MP.roster.length,r:MP.roster,seed:(Math.random()*4294967296)>>>0,stg:1+(Math.random()*5|0)};mpSendAll(o);mpBegin(o)});
 $('mp-copy').addEventListener('click',async()=>{const o=$('mp-out');if(!o.value)return;try{await navigator.clipboard.writeText(o.value);mpSay('コピーしました')}catch(_){o.focus();o.select();try{document.execCommand('copy');mpSay('コピーしました')}catch(__){mpSay('枠を長押しして、全選択してコピーしてください')}}});
 $('mp-paste').addEventListener('click',async()=>{try{$('mp-in').value=await navigator.clipboard.readText();mpSay('貼り付けました')}catch(_){mpSay('貼り付けできません。入力欄を長押しして貼り付けてください')}});
-$('mp-back').addEventListener('click',()=>{if(MP.role){mpLeave('');return}$('mp').classList.add('hide');$('start').classList.remove('hide')});
+$('mp-back').addEventListener('click',()=>{if(MP.role){mpLeave('');return}$('mpscr').classList.add('hide');$('start').classList.remove('hide')});
 try{$('mp-name').value=localStorage.getItem('hc-name')||''}catch(_){}
 $('mp-name').addEventListener('input',()=>{try{localStorage.setItem('hc-name',$('mp-name').value)}catch(_){}});
 ['mp-name','mp-in','mp-out'].forEach(id=>['keydown','keyup'].forEach(t=>$(id).addEventListener(t,e=>e.stopPropagation())));
