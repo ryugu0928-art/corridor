@@ -937,7 +937,7 @@ $('mp-rj').addEventListener('click',mpJoinRoom);$('mp-rc').addEventListener('key
 $('mp-man').addEventListener('click',()=>{const r=$('mp-v-room'),on=r.classList.toggle('man');$('mp-man').textContent=on?'部屋コードに戻す':'手動で接続（予備）'});
 $('mp-rcode').addEventListener('click',()=>{const c=MP.code;if(c&&navigator.clipboard)navigator.clipboard.writeText(c).then(()=>mpSay('コードをコピーしました'),()=>{})});
 $('mp-act').addEventListener('click',()=>MP.role==='host'?mpAccept():mpGuestMake());
-$('mp-start').addEventListener('click',()=>{if(MP.role!=='host'||MP.roster.length<2||MP.started)return;const o={k:'start',n:MP.roster.length,r:MP.roster,seed:(Math.random()*4294967296)>>>0,stg:1+(Math.random()*5|0)};mpSendAll(o);mpBegin(o)});
+$('mp-start').addEventListener('click',()=>{if(MP.role!=='host'||MP.roster.length<2||MP.started)return;const o={k:'start',n:MP.roster.length,r:MP.roster,seed:(Math.random()*4294967296)>>>0,stg:1};mpSendAll(o);mpBegin(o)});
 $('mp-copy').addEventListener('click',async()=>{const o=$('mp-out');if(!o.value)return;try{await navigator.clipboard.writeText(o.value);mpSay('コピーしました')}catch(_){o.focus();o.select();try{document.execCommand('copy');mpSay('コピーしました')}catch(__){mpSay('枠を長押しして、全選択してコピーしてください')}}});
 $('mp-paste').addEventListener('click',async()=>{try{$('mp-in').value=await navigator.clipboard.readText();mpSay('貼り付けました')}catch(_){mpSay('貼り付けできません。入力欄を長押しして貼り付けてください')}});
 $('mp-back').addEventListener('click',()=>{if(MP.role){mpLeave('');return}$('mpscr').classList.add('hide');$('start').classList.remove('hide')});
