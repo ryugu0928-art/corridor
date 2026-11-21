@@ -210,7 +210,7 @@ body.touch #hud{bottom:auto;top:calc(36px + env(safe-area-inset-top,0px));left:m
 <div class="scr hide" id="set" role="dialog" aria-label="設定"><h1>設定</h1><div id="rows"></div><p>変更はすぐに反映され、このブラウザに保存されます。</p><div><button class="btn sub" id="rst">初期値に戻す</button><button class="btn" id="cls">閉じる</button></div></div>
 <div class="scr hide" id="mpscr" role="dialog" aria-label="マルチプレイ"><h1>マルチプレイ</h1><p class="mpn">同じWi‑Fi内の端末どうしで遊べます（2〜4人）。部屋コードの受け渡しにだけ、外部の仲介サービス（PeerJS）を使います。</p>
 <div id="mp-v-menu"><div class="mprow"><label for="mp-name">名前</label><input class="mpi" id="mp-name" maxlength="8" placeholder="プレイヤー" autocomplete="off"></div><div><button class="btn" id="mp-host">部屋を作る</button><button class="btn" id="mp-join">部屋に参加</button></div></div>
-<div id="mp-v-room" class="hide"><div class="mp-h hide" id="mp-room"><div class="mpcl">部屋コード</div><div class="mpcode" id="mp-rcode" title="タップでコピー">――</div></div><div id="mp-gj" class="hide"><input class="mpi" id="mp-rc" maxlength="6" placeholder="コード" autocomplete="off" autocapitalize="characters" spellcheck="false"><button class="btn" id="mp-rj">入室</button></div><div id="mp-list"></div><div class="mp-h mp-man hide"><button class="btn sub" id="mp-inv">参加者を追加</button></div>
+<div id="mp-v-room" class="hide"><div class="mp-h hide" id="mp-room"><div class="mpcl">部屋コード</div><div class="mpcode" id="mp-rcode" title="タップでコピー">――</div></div><div id="mp-gj" class="hide"><input class="mpi" id="mp-rc" maxlength="6" placeholder="コード" autocomplete="off" autocorrect="off" enterkeyhint="go" autocapitalize="characters" spellcheck="false"><button class="btn" id="mp-rj">入室</button></div><div id="mp-list"></div><div class="mp-h mp-man hide"><button class="btn sub" id="mp-inv">参加者を追加</button></div>
 <div id="mp-codes" class="mp-man"><div id="mp-bin"><label class="mpl" id="mp-l-in" for="mp-in">受け取ったコード</label><textarea class="mpt" id="mp-in" rows="3" spellcheck="false" autocomplete="off" autocapitalize="off"></textarea><div><button class="btn sub" id="mp-paste">貼り付け</button><button class="btn sub" id="mp-act">接続</button></div></div>
 <div id="mp-bout"><label class="mpl" id="mp-l-out" for="mp-out">渡すコード</label><textarea class="mpt" id="mp-out" rows="3" readonly spellcheck="false"></textarea><div><button class="btn sub" id="mp-copy">コピー</button></div></div></div>
 <div class="mp-h hide"><button class="btn" id="mp-start" disabled>開始</button></div></div>
@@ -721,7 +721,7 @@ const mpView=v=>{$('mp-v-menu').classList.toggle('hide',v!=='menu');$('mp-v-room
 function mpIce(pc){return new Promise(res=>{if(pc.iceGatheringState==='complete')return res();const f=()=>{if(pc.iceGatheringState==='complete'){pc.removeEventListener('icegatheringstatechange',f);res()}};pc.addEventListener('icegatheringstatechange',f);setTimeout(res,3000)})}
 const MP_PFX='utsuro-',PEER_OPTS={config:{iceServers:[]}},PEER_SRC='https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js';
 function mpLoadPeer(){return new Promise((res,rej)=>{if(window.Peer)return res();const e=document.createElement('script');let t=setTimeout(()=>{e.remove();rej(new Error('timeout'))},10000);e.src=PEER_SRC;e.onload=()=>{clearTimeout(t);window.Peer?res():rej(new Error('nopeer'))};e.onerror=()=>{clearTimeout(t);e.remove();rej(new Error('load'))};document.head.appendChild(e)})}
-function mpWrap(conn){const dc={onmessage:null,onclose:null,send:s=>conn.send(s),get readyState(){return conn.open?'open':'closed'}};conn.on('data',d=>{if(dc.onmessage)dc.onmessage({data:typeof d==='string'?d:String(d)})});conn.on('close',()=>{if(dc.onclose)dc.onclose()});conn.on('error',()=>{try{conn.close()}catch(_){}});return{dc,pc:{close(){try{conn.close()}catch(_){}}}}}
+function mpWrap(conn){const dc={onmessage:null,onclose:null,send:s=>conn.send(s),get readyState(){return conn.open?'open':'closed'}};conn.on('data',d=>{if(dc.onmessage)dc.onmessage({data:typeof d==='string'?d:String(d)})});let gone=0;const fire=()=>{if(gone)return;gone=1;if(dc.onclose)dc.onclose()};conn.on('close',fire);conn.on('open',()=>{const rp=conn.peerConnection;if(rp)rp.addEventListener('iceconnectionstatechange',()=>{if(rp.iceConnectionState==='failed'||rp.iceConnectionState==='closed')fire()})});conn.on('error',()=>{try{conn.close()}catch(_){}});return{dc,pc:{close(){try{conn.close()}catch(_){}}}}}
 function mpCode(){const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',r=crypto.getRandomValues(new Uint32Array(5));let s='';r.forEach(x=>{s+=A[x%A.length]});return s}
 async function mpOpenRoom(){const tk=MP.rt=(MP.rt||0)+1;$('mp-rcode').textContent='――';
  try{await mpLoadPeer()}catch(_){if(tk===MP.rt)mpSay('接続サービスに繋げません。下の「手動で接続」を使えます');return}
@@ -745,7 +745,7 @@ async function mpJoinRoom(){const code=($('mp-rc').value||'').toUpperCase().repl
 function mpDraw(){const box=$('mp-list');box.innerHTML='';for(let i=0;i<4;i++){const p=MP.roster[i],r=document.createElement('div'),a=document.createElement('span'),b=document.createElement('span');r.className='mpr'+(p?'':' empty');a.textContent=(i+1)+'  '+(p?p.name+(p.id===0?'（ホスト）':'')+(p.id===MP.id?'（あなた）':''):'―― 待機中 ――');b.textContent=p&&p.id!==0&&p.ping!=null?p.ping+'ms':'';r.append(a,b);box.appendChild(r)}$('mp-gj').classList.toggle('hide',!(MP.role==='guest'&&MP.roster.length===0));$('mp-start').disabled=!(MP.role==='host'&&MP.roster.length>=2&&!MP.started)}
 function mpSendAll(o){const s=JSON.stringify(o);Object.values(MP.peers).forEach(p=>{if(p.dc&&p.dc.readyState==='open')p.dc.send(s)})}
 function mpBroadcastRoster(){mpDraw();mpPrune();mpSendAll({k:'roster',r:MP.roster})}
-function mpHostWire(dc,pc,slot){dc.onmessage=e=>{let m;try{m=JSON.parse(e.data)}catch(_){return}
+function mpHostWire(dc,pc,slot){dc.onmessage=e=>{let m;try{m=JSON.parse(e.data)}catch(_){return}if(slot.id)(MP.rx=MP.rx||{})[slot.id]=performance.now();
  if(m.k==='hi'){if(slot.id)return;if(MP.started){dc.send(JSON.stringify({k:'busy'}));return}if(MP.roster.length>=4){dc.send(JSON.stringify({k:'full'}));return}let id=1;while(MP.roster.some(p=>p.id===id))id++;const name=String(m.n||'プレイヤー').slice(0,8);MP.roster.push({id,name,ping:null});MP.peers[id]={dc,pc};slot.id=id;if(MP.pend&&MP.pend.pc===pc)MP.pend=null;dc.send(JSON.stringify({k:'welcome',id,r:MP.roster}));mpBroadcastRoster();mpSay(name+'が参加しました');$('mp-out').value='';$('mp-in').value=''}
  else if(m.k==='q'&&slot.id){const p=MP.roster.find(x=>x.id===slot.id);if(p)p.ping=Math.round(performance.now()-m.t)}
  else if(m.k==='cl'&&slot.id)mpHostClaim(slot.id,m.t,m.i)
@@ -764,7 +764,7 @@ async function mpGuestMake(){try{const m=mpDec($('mp-in').value);if(m.k!=='o')th
  if(MP.hostPc){try{MP.hostPc.close()}catch(_){}}
  const pc=mpPc();MP.hostPc=pc;pc.ondatachannel=e=>{const dc=e.channel;MP.hostDc=dc;let hiSent=false;dc.onopen=()=>{if(hiSent)return;hiSent=true;dc.send(JSON.stringify({k:'hi',n:mpName()}))};dc.onmessage=mpGuestMsg;dc.onclose=mpGuestLost;if(dc.readyState==='open')dc.onopen()};
  await pc.setRemoteDescription(m.d);await pc.setLocalDescription(await pc.createAnswer());await mpIce(pc);$('mp-out').value=mpEnc({k:'a',d:pc.localDescription});mpSay('返信コードをコピーしてホストに渡してください。接続されると自動で部屋が表示されます')}catch(e){mpSay('失敗しました: '+e.message)}}
-function mpGuestMsg(e){let m;try{m=JSON.parse(e.data)}catch(_){return}
+function mpGuestMsg(e){let m;try{m=JSON.parse(e.data)}catch(_){return}MP.hrx=performance.now();
  if(m.k==='welcome'){MP.id=m.id;MP.roster=m.r;MP.started=false;mpDraw();mpSay('参加しました。ホストの開始を待っています')}
  else if(m.k==='roster'){MP.roster=m.r;mpDraw();mpPrune()}
  else if(m.k==='ps'&&Array.isArray(m.a))mpApply(m.a)
@@ -779,6 +779,7 @@ function mpGuestMsg(e){let m;try{m=JSON.parse(e.data)}catch(_){return}
  else if(m.k==='busy')mpLeave('ゲームはすでに始まっています');
  else if(m.k==='full')mpLeave('満員です（4人）');
  else if(m.k==='bye'){if(!MP.fin)mpLeave('ホストが部屋を閉じました')}}
+const MP_TIMEOUT=180000;
 function mpGuestLost(){if(MP.role==='guest'&&!MP.leaving&&!MP.fin)mpLeave('ホストとの接続が切れました')}
 const mpSize=n=>{const v=Math.round(17*Math.sqrt(n));return v%2?v:v+1};
 // ---- Phase 3: pickups & exit sync ----
@@ -901,13 +902,13 @@ function mpMakeAv(p){const col=AVC[Math.max(0,MP.roster.findIndex(r=>r.id===p.id
  const lamp=new THREE.PointLight(col,.9,7);lamp.position.set(0,1.5,.3);
  const nm=mpLabel(p.name);nm.position.y=1.95;
  G.add(body,head,torch,lamp,nm);G.userData={tx:0,tz:0,ty:0,on:true,hid:false,cr:false,init:false,lamp,name:p.name};world.add(G);return G}
-function mpSpawnAvatars(){MP.av={};MP.snap={};MP.tt=0;MP.en=[];MP.enM=[];MP.fz=false;MP.dead={};MP.crk=null;MP.freeze=0;MP.enemies=null;MP.pl={};MP.out={};MP.gone={};MP.fin=null;MP.spec=null;MP.specLb='';MP.specK='';MP.nm={};
+function mpSpawnAvatars(){MP.rx={};MP.hrx=0;MP.av={};MP.snap={};MP.tt=0;MP.en=[];MP.enM=[];MP.fz=false;MP.dead={};MP.crk=null;MP.freeze=0;MP.enemies=null;MP.pl={};MP.out={};MP.gone={};MP.fin=null;MP.spec=null;MP.specLb='';MP.specK='';MP.nm={};
  MP.roster.forEach(r=>{MP.nm[r.id]=r.name;MP.pl[r.id]={id:r.id,x:0,z:0,yaw:0,on:true,hid:false,cr:false,mov:false,spr:false,ghost:false,seenH:false,hideT:0,imm:0,capT:0,prevHid:false}});
  if(MP.role==='host')mpSpawnEnemies()}
 function mpApply(a){if(!MP.inGame||!world)return;for(const q of a){const id=q[0];if(id===MP.id)continue;const p=MP.roster.find(r=>r.id===id);if(!p)continue;let v=MP.av[id];if(!v)v=MP.av[id]=mpMakeAv(p);const u=v.userData;u.tx=q[1];u.tz=q[2];u.ty=q[3];u.on=!!(q[4]&1);u.hid=!!(q[4]&2);u.cr=!!(q[4]&4);u.dead=!!(q[4]&128);if(!u.init){u.init=true;v.position.set(q[1],0,q[2])}}}
 function mpPrune(){if(!MP.inGame)return;for(const id in MP.av)if(!MP.roster.some(r=>r.id===+id)){const v=MP.av[id];say(v.userData.name+'との接続が切れた',3000);if(v.parent){disposeWorld(v);v.parent.remove(v)}delete MP.av[id]}for(const id in MP.snap)if(!MP.roster.some(r=>r.id===+id))delete MP.snap[id];for(const id in MP.pl)if(!MP.roster.some(r=>r.id===+id))delete MP.pl[id]}
 function mpTick(dt){if(!MP.inGame||!world)return;MP.tt+=dt;const host=MP.role==='host';
- if(host){mpAI(dt);mpCheckEnd()}
+ if(host){mpAI(dt);mpCheckEnd();const nw=performance.now(),rx=MP.rx=MP.rx||{};for(const id of Object.keys(MP.peers)){if(!rx[id])rx[id]=nw;else if(nw-rx[id]>MP_TIMEOUT){delete rx[id];mpHostLeft({id:+id},MP.peers[id].pc)}}}else if(MP.role==='guest'){const nw=performance.now();if(!MP.hrx)MP.hrx=nw;else if(nw-MP.hrx>MP_TIMEOUT){MP.hrx=0;mpGuestLost()}}
  if(MP.tt>=.066){MP.tt=0;const me=[MP.id,+P.x.toFixed(2),+P.z.toFixed(2),+P.yaw.toFixed(2),(P.on?1:0)|(hidden?2:0)|(keys.KeyC?4:0)|(state==='play'?mpF:0)];
   if(host){MP.snap[0]=me;const arr=Object.values(MP.snap).map(q=>MP.dead[q[0]]?[q[0],q[1],q[2],q[3],q[4]|128]:q);
    for(const q of arr){const p=MP.pl[q[0]];if(p){p.x=q[1];p.z=q[2];p.yaw=q[3];const f=q[4];p.on=!!(f&1);p.hid=!!(f&2);p.cr=!!(f&4);p.mov=!!(f&8);p.spr=!!(f&16);p.ghost=!!(f&32)}}
@@ -932,7 +933,7 @@ function mpJoin(){MP.id=-1;MP.roster=[];MP.started=false;mpRole('guest');mpSay('
 function mpLeave(msg){const wasIn=MP.inGame;MP.leaving=true;clearInterval(MP.iv);Object.values(MP.peers).forEach(p=>{try{p.dc.send(JSON.stringify({k:'bye'}))}catch(_){}setTimeout(()=>{try{p.pc.close()}catch(_){}},200)});[MP.pend&&MP.pend.pc,MP.hostPc].forEach(pc=>{if(pc)try{pc.close()}catch(_){}});MP.rt=(MP.rt||0)+1;{const hp=MP.peer;MP.peer=null;if(hp)setTimeout(()=>{try{hp.destroy()}catch(_){}},400)}$('mp-rcode').textContent='――';$('mp-v-room').classList.remove('man');$('mp-man').textContent='手動で接続（予備）';MP.role=null;MP.fin=null;MP.spec=null;MP.id=-1;MP.peers={};MP.roster=[];MP.pend=null;MP.hostDc=null;MP.hostPc=null;MP.started=false;$('mp-out').value='';$('mp-in').value='';$('mp-back').textContent='戻る';mpView('menu');mpSay(msg||'');MP.leaving=false;if(wasIn){MP.inGame=false;PN=1;MP.av={};MP.snap={};toTitle();say(msg||'マルチプレイを終了しました',4000)}}
 $('mpb').addEventListener('click',()=>{$('start').classList.add('hide');$('mpscr').classList.remove('hide');mpView('menu');const ok=typeof RTCPeerConnection!=='undefined';$('mp-host').disabled=$('mp-join').disabled=!ok;mpSay(ok?'':'このブラウザは対応していません（WebRTCが使えません）')});
 $('mp-host').addEventListener('click',mpHost);$('mp-join').addEventListener('click',mpJoin);$('mp-inv').addEventListener('click',mpInvite);
-$('mp-rj').addEventListener('click',mpJoinRoom);$('mp-rc').addEventListener('keydown',e=>{if(e.key==='Enter')mpJoinRoom()});$('mp-rc').addEventListener('input',e=>{e.target.value=e.target.value.toUpperCase()});
+$('mp-rj').addEventListener('click',mpJoinRoom);$('mp-rc').addEventListener('keydown',e=>{if(e.key==='Enter')mpJoinRoom()});{const rc=$('mp-rc'),fix=()=>{const v=rc.value,n=v.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6);if(v!==n){const c=rc.selectionStart,d=v.length-n.length;rc.value=n;try{rc.setSelectionRange(Math.max(0,c-d),Math.max(0,c-d))}catch(_){}}};rc.addEventListener('input',e=>{if(e.isComposing)return;fix()});rc.addEventListener('compositionend',fix);rc.addEventListener('blur',fix)}
 $('mp-man').addEventListener('click',()=>{const r=$('mp-v-room'),on=r.classList.toggle('man');$('mp-man').textContent=on?'部屋コードに戻す':'手動で接続（予備）'});
 $('mp-rcode').addEventListener('click',()=>{const c=MP.code;if(c&&navigator.clipboard)navigator.clipboard.writeText(c).then(()=>mpSay('コードをコピーしました'),()=>{})});
 $('mp-act').addEventListener('click',()=>MP.role==='host'?mpAccept():mpGuestMake());
@@ -942,7 +943,7 @@ $('mp-paste').addEventListener('click',async()=>{try{$('mp-in').value=await navi
 $('mp-back').addEventListener('click',()=>{if(MP.role){mpLeave('');return}$('mpscr').classList.add('hide');$('start').classList.remove('hide')});
 try{$('mp-name').value=localStorage.getItem('hc-name')||''}catch(_){}
 $('mp-name').addEventListener('input',()=>{try{localStorage.setItem('hc-name',$('mp-name').value)}catch(_){}});
-['mp-name','mp-in','mp-out'].forEach(id=>['keydown','keyup'].forEach(t=>$(id).addEventListener(t,e=>e.stopPropagation())));
+['mp-name','mp-in','mp-out','mp-rc'].forEach(id=>['keydown','keyup'].forEach(t=>$(id).addEventListener(t,e=>e.stopPropagation())));
 function begin(){audioInit();if(AC.state==='suspended')AC.resume();$('start').classList.remove('intro');$('start').classList.add('hide');$('end').classList.add('hide');if(tg)tg.visible=false;scene.fog.density=.1;$('mode-tag').classList.remove('hide');$('bar').classList.remove('hide');stg=1;total=0;totN=0;totU=0;retries=0;runStart=performance.now();start(false);showTouch();lockPtr()}
 $('go').addEventListener('click',begin);
 document.querySelectorAll('button.mode').forEach(b=>b.addEventListener('click',()=>{mode=b.dataset.m;document.querySelectorAll('button.mode').forEach(x=>{const on=x===b;x.classList.toggle('on',on);x.setAttribute('aria-checked',on)});audioInit();if(AC.state==='suspended')AC.resume();tone(110,0,.5,.15,'sine',70)}));
