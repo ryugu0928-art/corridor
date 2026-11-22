@@ -187,6 +187,8 @@ body.touch #hud{bottom:auto;top:calc(36px + env(safe-area-inset-top,0px));left:m
 body:has(#bar.hide) #hud{display:none}
 .acts{display:contents}
 #mapc{left:auto}
+@media (pointer:coarse) and (not (any-pointer:fine)){.pc{display:none!important}.how .note.tch{color:var(--ink);font-size:13px}}
+@media (any-pointer:fine),(pointer:fine){.how .note.tch{opacity:.8}}
 @media (max-height:480px){
  .scr{padding:10px max(16px,env(safe-area-inset-right,0px)) 10px max(16px,env(safe-area-inset-left,0px))}
  .scr h1{font-size:clamp(26px,9vh,42px);margin:0 0 2px .35em;letter-spacing:.3em}
@@ -247,13 +249,14 @@ body:has(#bar.hide) #hud{display:none}
  .modes{flex-direction:column;align-items:stretch;width:min(100%,24em);margin:14px 0 12px}
  .how{margin-top:16px}
  body.touch #hint{padding:0 12px}
+ #mp-gj{width:min(30em,86vw);margin-left:auto;margin-right:auto}#mp-gj #mp-rc{max-width:none;flex:1 1 auto}
  body.touch #msg{top:18%}
  body.touch #stcard{top:30%}
 }
 </style></head><body>
 <canvas id="c"></canvas><div id="vig"></div><div id="grain"></div><div id="flash"></div>
 <div id="msg"></div>
-<div id="spec" class="hide"><span class="nm" id="spn"></span><small id="sps"></small><button class="btn sub" id="spp">◀</button><button class="btn sub" id="spx">▶</button><button class="btn sub" id="sph">タイトルへ</button><small>← → / A D / 画面タップで切替</small></div>
+<div id="spec" class="hide"><span class="nm" id="spn"></span><small id="sps"></small><button class="btn sub" id="spp">◀</button><button class="btn sub" id="spx">▶</button><button class="btn sub" id="sph">タイトルへ</button><small><span class="pc">← → / A D / </span>画面タップで切替</small></div>
 <div id="mode-tag" class="hide">ランダムモード</div>
 <div id="stcard"></div><div id="hideov" class="hide"></div><div id="hint"></div><div id="aw"><i></i></div>
 <div id="hud"><div><span id="rl">護符</span> <span id="rel">0</span>/<span id="need">4</span></div><div>灯り<div class="bar"><i id="bat"></i></div></div><div>体力<div class="bar"><i id="sta"></i></div></div></div>
@@ -267,7 +270,7 @@ body:has(#bar.hide) #hud{display:none}
 </div>
 <div class="diffs" role="radiogroup" aria-label="難易度"><button class="diff" data-d="easy" role="radio" aria-checked="false">やさしい</button><button class="diff on" data-d="normal" role="radio" aria-checked="true">ふつう</button><button class="diff" data-d="hard" role="radio" aria-checked="false">むずかしい</button></div>
 <div class="acts"><button class="btn" id="go">入る</button><button class="btn sub" id="opt">設定</button><button class="btn sub" id="mpb">マルチプレイ</button></div>
-<div class="how"><p class="goal">全5回廊。回廊ごとに姿の違う宝を集め、出口の封印を解け。</p><div class="keys"><span><kbd>WASD</kbd>移動</span><span><kbd>Shift</kbd>走る</span><span><kbd>F</kbd>懐中電灯</span><span><kbd>マウス</kbd>視点</span><span><kbd>C</kbd>しゃがむ（静か）</span><span><kbd>E</kbd>ロッカーに隠れる</span><span><kbd>1〜6・ホイール</kbd>持ち物を選ぶ</span><span><kbd>左クリック</kbd>使う</span><span><kbd>P</kbd>一時停止</span></div><p class="note">Q・R・M・G・T・Nキーでも持ち物を使えます。Nは拾った地図の開閉。</p><p class="note">スマホ：左の円で移動 / 画面ドラッグで視点 / 右のボタンで操作（持ち物はタップで選ぶ）。一時停止は右上のボタン。</p><p class="note">ヘッドホン推奨</p></div>
+<div class="how"><p class="goal">全5回廊。回廊ごとに姿の違う宝を集め、出口の封印を解け。</p><div class="keys pc"><span><kbd>WASD</kbd>移動</span><span><kbd>Shift</kbd>走る</span><span><kbd>F</kbd>懐中電灯</span><span><kbd>マウス</kbd>視点</span><span><kbd>C</kbd>しゃがむ（静か）</span><span><kbd>E</kbd>ロッカーに隠れる</span><span><kbd>1〜6・ホイール</kbd>持ち物を選ぶ</span><span><kbd>左クリック</kbd>使う</span><span><kbd>P</kbd>一時停止</span></div><p class="note pc">Q・R・M・G・T・Nキーでも持ち物を使えます。Nは拾った地図の開閉。</p><p class="note tch">スマホ：左の円で移動 / 画面ドラッグで視点 / 右のボタンで操作（持ち物はタップで選ぶ）。一時停止は右上のボタン。</p><p class="note">ヘッドホン推奨</p></div>
 </div>
 <div class="scr hide" id="end"><h1 id="et"></h1><p id="ed"></p><div><button class="btn hide" id="next">次の回廊へ</button><button class="btn hide" id="retry">この回廊をやり直す</button><button class="btn" id="again">最初から</button><button class="btn sub" id="home">タイトルへ</button></div></div>
 <div id="tc" class="hide"><button id="pb" aria-label="一時停止">Ⅱ</button><div id="joy"><i id="jk"></i></div><div id="tb"><button data-a="use">使う</button><button data-a="light">灯り</button><button data-a="e">隠れる</button><button data-a="run">走る</button><button data-a="crouch">しゃがむ</button></div></div>
@@ -277,7 +280,7 @@ body:has(#bar.hide) #hud{display:none}
 <div class="scr hide" id="set" role="dialog" aria-label="設定"><h1>設定</h1><div id="rows"></div><p>変更はすぐに反映され、このブラウザに保存されます。</p><div><button class="btn sub" id="rst">初期値に戻す</button><button class="btn" id="cls">閉じる</button></div></div>
 <div class="scr hide" id="mpscr" role="dialog" aria-label="マルチプレイ"><h1>マルチプレイ</h1><p class="mpn">同じWi‑Fi内の端末どうしで遊べます（2〜4人）。部屋コードの受け渡しにだけ、外部の仲介サービス（PeerJS）を使います。</p>
 <div id="mp-v-menu"><div class="mprow"><label for="mp-name">名前</label><input class="mpi" id="mp-name" maxlength="8" placeholder="プレイヤー" autocomplete="off"></div><div><button class="btn" id="mp-host">部屋を作る</button><button class="btn" id="mp-join">部屋に参加</button></div></div>
-<div id="mp-v-room" class="hide"><div class="mp-h hide" id="mp-room"><div class="mpcl">部屋コード</div><div class="mpcode" id="mp-rcode" title="タップでコピー">――</div></div><div id="mp-gj" class="hide"><input class="mpi" id="mp-rc" maxlength="6" placeholder="コード" autocomplete="off" autocorrect="off" enterkeyhint="go" autocapitalize="characters" spellcheck="false"><button class="btn" id="mp-rj">入室</button></div><div id="mp-list"></div><div class="mp-h mp-man hide"><button class="btn sub" id="mp-inv">参加者を追加</button></div>
+<div id="mp-v-room" class="hide"><div class="mp-h hide" id="mp-room"><div class="mpcl">部屋コード</div><div class="mpcode" id="mp-rcode" title="タップでコピー">――</div></div><div id="mp-gj" class="hide"><input class="mpi" id="mp-rc" maxlength="6" placeholder="部屋コード" aria-label="部屋コード" autocomplete="off" autocorrect="off" enterkeyhint="go" autocapitalize="characters" spellcheck="false"><button class="btn" id="mp-rj">入室</button></div><div id="mp-list"></div><div class="mp-h mp-man hide"><button class="btn sub" id="mp-inv">参加者を追加</button></div>
 <div id="mp-codes" class="mp-man"><div id="mp-bin"><label class="mpl" id="mp-l-in" for="mp-in">受け取ったコード</label><textarea class="mpt" id="mp-in" rows="3" spellcheck="false" autocomplete="off" autocapitalize="off"></textarea><div><button class="btn sub" id="mp-paste">貼り付け</button><button class="btn sub" id="mp-act">接続</button></div></div>
 <div id="mp-bout"><label class="mpl" id="mp-l-out" for="mp-out">渡すコード</label><textarea class="mpt" id="mp-out" rows="3" readonly spellcheck="false"></textarea><div><button class="btn sub" id="mp-copy">コピー</button></div></div></div>
 <div class="mp-h hide"><button class="btn" id="mp-start" disabled>開始</button></div></div>
