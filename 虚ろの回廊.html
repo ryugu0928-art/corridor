@@ -261,6 +261,15 @@ body:has(#bar.hide) #hud{display:none}
  body.touch #msg{top:18%}
  body.touch #stcard{top:30%}
 }
+#recscr{background:rgba(3,2,2,.98)}#recscr h1{font-size:clamp(28px,6vw,48px);margin-bottom:14px}
+#recscr table{border-collapse:collapse;margin:6px auto 12px;font-size:15px;letter-spacing:.08em}
+#recscr th{color:var(--dim);font-weight:400;font-size:12px;letter-spacing:.15em}
+#recscr th,#recscr td{padding:6px 14px;border-bottom:1px solid rgba(201,191,176,.12);text-align:center;white-space:nowrap}
+#recscr td:first-child,#recscr th:first-child{text-align:left}#recscr tr.tot td{color:var(--ink);border-bottom:0}
+#recscr p{font-size:14px;letter-spacing:.06em;margin:2px 0}
+#recscr .bdg{max-width:44em;margin:6px auto 10px;font-size:13px;line-height:1.9;color:var(--dim)}#recscr .bdg span{display:inline-block;margin:0 10px;white-space:nowrap}#recscr .bdg .on{color:var(--ink)}
+@media (max-height:520px){#recscr h1{font-size:clamp(22px,8vh,34px);margin-bottom:4px}#recscr table{font-size:12px;margin:2px auto 6px}#recscr th,#recscr td{padding:2px 8px}#recscr p{font-size:12px}}
+.btn.big{border-color:#b3261e;box-shadow:0 0 22px rgba(138,26,20,.45);transform:scale(1.08);margin:10px 8px}
 </style></head><body>
 <canvas id="c"></canvas><div id="vig"></div><div id="grain"></div><div id="flash"></div>
 <div id="msg"></div>
@@ -276,9 +285,10 @@ body:has(#bar.hide) #hud{display:none}
 <button class="mode on" data-m="random" role="radio" aria-checked="true"><b>ランダムモード</b><em>入るたびに、迷路・宝・「それ」の位置が変わる。</em><i class="bst" id="bst-random"></i></button>
 <button class="mode" data-m="fixed" role="radio" aria-checked="false"><b>固定迷路モード</b><em>毎回同じ迷路と配置。道を覚えて逃げ切れ。</em><i class="bst" id="bst-fixed"></i></button>
 <button class="mode" data-m="daily" role="radio" aria-checked="false"><b>今日の挑戦</b><em>今日だけの共通迷路。難易度は「ふつう」固定。</em><i class="bst" id="bst-daily"></i></button>
+<button class="mode" data-m="inf" role="radio" aria-checked="false"><b>無限モード</b><em>5つの回廊が深さを増しながら続く。捕まるまで潜れ。</em><i class="bst" id="bst-inf"></i></button>
 </div>
 <div class="diffs" role="radiogroup" aria-label="難易度"><button class="diff" data-d="easy" role="radio" aria-checked="false">やさしい</button><button class="diff on" data-d="normal" role="radio" aria-checked="true">ふつう</button><button class="diff" data-d="hard" role="radio" aria-checked="false">むずかしい</button></div>
-<div class="acts"><button class="btn" id="go">入る</button><button class="btn sub" id="opt">設定</button><button class="btn sub" id="mpb">マルチプレイ</button></div>
+<div class="acts"><button class="btn" id="go">入る</button><button class="btn sub" id="opt">設定</button><button class="btn sub" id="mpb">マルチプレイ</button><button class="btn sub" id="recb">記録</button></div>
 <p id="ttl"></p>
 <div class="how"><p class="goal">全5回廊。回廊ごとに姿の違う宝を集め、出口の封印を解け。</p><div class="keys pc"><span><kbd>WASD</kbd>移動</span><span><kbd>Shift</kbd>走る</span><span><kbd>F</kbd>懐中電灯</span><span><kbd>マウス</kbd>視点</span><span><kbd>C</kbd>しゃがむ（静か）</span><span><kbd>E</kbd>ロッカーに隠れる</span><span><kbd>1〜6・ホイール</kbd>持ち物を選ぶ</span><span><kbd>左クリック</kbd>使う</span><span><kbd>P</kbd>一時停止</span></div><p class="note pc">Q・R・M・G・T・Nキーでも持ち物を使えます。Nは拾った地図の開閉。</p><p class="note tch">スマホ：左の円で移動 / 画面ドラッグで視点 / 右のボタンで操作（持ち物はタップで選ぶ）。一時停止は右上のボタン。</p><p class="note">ヘッドホン推奨</p></div>
 </div>
@@ -288,6 +298,7 @@ body:has(#bar.hide) #hud{display:none}
 <div id="bar" class="hide"><div class="slot"><i>1</i><svg viewBox="0 0 24 24"><path d="M5 16l2-6 5-3 6 3 1 6-4 3H9z"/><path d="M9 12l3 2 3-3"/></svg><b>小石</b><span class="n" id="stn">3</span></div><div class="slot"><i>2</i><svg viewBox="0 0 24 24"><rect x="7" y="3" width="10" height="18" rx="1"/><path d="M10 8h4M10 12h4M10 16h2"/></svg><b id="crd">なし</b></div><div class="slot"><i>3</i><svg viewBox="0 0 24 24"><circle cx="12" cy="9" r="6"/><path d="M12 15v7M10 22h4M9 7a4 4 0 0 1 3-2"/></svg><b>手鏡</b><span class="n" id="mir">0</span></div><div class="slot"><i>4</i><svg viewBox="0 0 24 24"><rect x="9" y="8" width="6" height="13" rx="1"/><path d="M12 8V5l2-2M16 3l1 1M10 14h4"/></svg><b>爆竹</b><span class="n" id="ck">0</span></div><div class="slot"><i>5</i><svg viewBox="0 0 24 24"><circle cx="12" cy="11" r="7"/><path d="M8 20h8l-1-3H9zM8.5 9a4 4 0 0 1 3-3"/></svg><b>水晶玉</b><span class="n" id="ob">0</span></div><div class="slot"><i>6</i><svg viewBox="0 0 24 24"><path d="M4 6l5-2 6 2 5-2v14l-5 2-6-2-5 2z"/><path d="M9 4v14M15 6v14"/></svg><b>地図</b><span class="n" id="mp">0</span></div></div>
 <div class="scr hide" id="pause" role="dialog" aria-label="一時停止"><h1>一時停止</h1><p>Esc または P で再開できます。</p><div><button class="btn" id="pres">再開</button><button class="btn sub" id="pset">設定</button><button class="btn sub" id="ptit">タイトルへ</button></div></div>
 <div class="scr hide" id="set" role="dialog" aria-label="設定"><h1>設定</h1><div id="rows"></div><p>変更はすぐに反映され、このブラウザに保存されます。</p><div><button class="btn sub" id="rst">初期値に戻す</button><button class="btn" id="cls">閉じる</button></div></div>
+<div class="scr hide" id="recscr" role="dialog" aria-label="記録"><h1>記録</h1><div id="recbody"></div><div><button class="btn sub" id="recclr">記録を消す</button><button class="btn" id="reccls">閉じる</button></div></div>
 <div class="scr hide" id="mpscr" role="dialog" aria-label="マルチプレイ"><h1>マルチプレイ</h1><p class="mpn">同じWi‑Fi内の端末どうしで遊べます（2〜4人）。部屋コードの受け渡しにだけ、外部の仲介サービス（PeerJS）を使います。</p>
 <div id="mp-v-menu"><div class="mprow"><label for="mp-name">名前</label><input class="mpi" id="mp-name" maxlength="8" placeholder="プレイヤー" autocomplete="off"></div><div><button class="btn" id="mp-host">部屋を作る</button><button class="btn" id="mp-join">部屋に参加</button></div></div>
 <div id="mp-v-room" class="hide"><div class="mp-h hide" id="mp-room"><div class="mpcl">部屋コード</div><div class="mpcode" id="mp-rcode" title="タップでコピー">――</div></div><div id="mp-gj" class="hide"><input class="mpi" id="mp-rc" maxlength="6" placeholder="部屋コード" aria-label="部屋コード" autocomplete="off" autocorrect="off" enterkeyhint="go" autocapitalize="characters" spellcheck="false"><button class="btn" id="mp-rj">入室</button></div><div id="mp-list"></div><div class="mp-h mp-man hide"><button class="btn sub" id="mp-inv">参加者を追加</button></div>
@@ -312,10 +323,10 @@ document.getElementById('errcopy').addEventListener('click',()=>{try{navigator.c
 let N=17;const CS=4,WH=3.6;
 let g,relics=[],bats=[],got=0,state='menu';
 const $=id=>document.getElementById(id);
-let rng=Math.random,mode='random',diff='normal';const DIFFS={easy:{n:'やさしい',s:.85,v:.8,b:.8,m:.8},normal:{n:'ふつう',s:1,v:1,b:1,m:1},hard:{n:'むずかしい',s:1.15,v:1.2,b:1.2,m:1.25}};let DF=DIFFS.normal;const MODES={random:'ランダムモード',fixed:'固定迷路モード',daily:'デイリー'};
+let rng=Math.random,mode='random',diff='normal';const DIFFS={easy:{n:'やさしい',s:.85,v:.8,b:.8,m:.8},normal:{n:'ふつう',s:1,v:1,b:1,m:1},hard:{n:'むずかしい',s:1.15,v:1.2,b:1.2,m:1.25}};let DF=DIFFS.normal;const MODES={random:'ランダムモード',fixed:'固定迷路モード',daily:'デイリー',inf:'無限モード'};let depth=1;const INFM=()=>mode==='inf'&&!MP.inGame;const szR=()=>INFM()?1+.5*(N/17-1):1;const parSec=()=>Math.round((120+(N-17)*12+Math.min(2,(depth-1)/5|0)*20)/10)*10;const parTxt=()=>{const q=parSec();return((q/60)|0)+':'+String(q%60).padStart(2,'0')};
 function seeded(s){return()=>{s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 function shuf(a){for(let i=a.length-1;i>0;i--){const j=rng()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a}
-function gen(){N=MP.inGame?mpSize(PN):17;visited=new Uint8Array(N*N);floorT.repeat.set(N*CS/8,N*CS/8);ceilT.repeat.set(N*CS/8,N*CS/8);rng=MP.inGame?seeded(MP.seed):mode==='fixed'?seeded(20261118+stg*97):mode==='daily'?seeded(dailySeed()+stg*97):Math.random;g=[];for(let y=0;y<N;y++){g[y]=[];for(let x=0;x<N;x++)g[y][x]=1}
+function gen(){N=MP.inGame?mpSize(PN):INFM()?Math.min(27,17+2*((depth-1)/3|0)):17;visited=new Uint8Array(N*N);floorT.repeat.set(N*CS/8,N*CS/8);ceilT.repeat.set(N*CS/8,N*CS/8);rng=MP.inGame?seeded(MP.seed):mode==='fixed'?seeded(20261118+stg*97):mode==='daily'?seeded(dailySeed()+stg*97):Math.random;g=[];for(let y=0;y<N;y++){g[y]=[];for(let x=0;x<N;x++)g[y][x]=1}
  if(MP.inGame){const L=[[1,1]];g[1][1]=0;while(L.length){const k=rng()<.55?(rng()*L.length|0):L.length-1,[x,y]=L[k],o=shuf([[2,0],[-2,0],[0,2],[0,-2]]).filter(([dx,dy])=>{const nx=x+dx,ny=y+dy;return nx>0&&ny>0&&nx<N-1&&ny<N-1&&g[ny][nx]});if(!o.length){L.splice(k,1);continue}const[dx,dy]=o[0];g[y+dy/2][x+dx/2]=0;g[y+dy][x+dx]=0;L.push([x+dx,y+dy])}
   for(let i=0,t=0,ng=Math.round(((N-1)/2)**2*.2);i<ng&&t<ng*30;t++){const x=1+(rng()*(N-2)|0),y=1+(rng()*(N-2)|0);if(g[y][x]&&((x%2==0)!=(y%2==0))){g[y][x]=0;i++}}}
  else{(function carve(x,y){g[y][x]=0;shuf([[2,0],[-2,0],[0,2],[0,-2]]).forEach(([dx,dy])=>{const nx=x+dx,ny=y+dy;if(nx>0&&ny>0&&nx<N-1&&ny<N-1&&g[ny][nx]){g[y+dy/2][x+dx/2]=0;carve(nx,ny)}})})(1,1);
@@ -437,12 +448,12 @@ function say(t,ms){const m=$('msg');m.textContent=t;m.style.opacity=1;clearTimeo
 function bfs(a,b){const q=[a],pr={};pr[a]=null;while(q.length){const c=q.shift();if(c[0]===b[0]&&c[1]===b[1])break;[[1,0],[-1,0],[0,1],[0,-1]].forEach(([dx,dy])=>{const nx=c[0]+dx,ny=c[1]+dy;if(nx<0||ny<0||nx>=N||ny>=N||g[ny][nx])return;const key=nx+','+ny;if(key in pr)return;pr[key]=c;q.push([nx,ny])})}
  let c=b,p=pr[b[0]+','+b[1]];if(p===undefined)return a;while(p&&!(p[0]===a[0]&&p[1]===a[1])){c=p;p=pr[p[0]+','+p[1]]}return c}
 function los(ax,az,bx,bz){const d=Math.hypot(bx-ax,bz-az),n=Math.ceil(d/.5);for(let i=1;i<n;i++){const t=i/n;if(solid(ax+(bx-ax)*t,az+(bz-az)*t))return false}return true}
-function start(keep){NEED=[4,4,5,5,6][stg-1]*(MP.inGame?PN:1);const sb=P.bat,ss=stones,sc0=card,sm=mir;gen();build();applyTheme();decor();decor2();decor3();decor4();decor5();initWater();showStage();got=0;hidden=false;aware=0;stones=keep?ss:3;mir=keep?sm:0;crk=keep?crk:0;orb=keep?orb:0;crkT=0;crkL.intensity=0;freezeT=0;eAct=null;bfsKey='';mapHave=false;mapOpen=false;mapDirty=true;visited.fill(0);exitSeen=false;$('mapc').classList.add('hide');eSpeed=2;noticed=0;used=0;tStart=performance.now();card=keep?sc0:null;ghost=0;swift=0;showCard();$('stn').textContent=stones;$('hideov').classList.add('hide');$('rel').textContent=0;$('need').textContent=NEED;$('mode-tag').innerHTML=(MP.inGame?'<span style="color:'+mpCol(MP.id)+'">●</span> マルチプレイ'+PN+'人（あなたは'+AVN[mpCI(MP.id)%4]+'）':MODES[mode])+' / '+DF.n+' / 第'+stg+'回廊';{const sp0=mpSpawn();P.x=sp0[0]*CS;P.z=sp0[1]*CS}P.yaw=-Math.PI/2*0;P.pitch=0;P.bat=keep?Math.min(100,sb+50):100;P.sta=100;P.on=true;
+function start(keep){NEED=[4,4,5,5,6][stg-1]*(MP.inGame?PN:1)+(INFM()?Math.min(2,(depth-1)/5|0):0);if(INFM()){const b0=DIFFS[diff],k0=Math.min(depth-1,12);DF={n:b0.n,s:b0.s*(1+.04*k0),v:b0.v*(1+.03*k0),b:b0.b,m:b0.m}}const sb=P.bat,ss=stones,sc0=card,sm=mir;gen();build();applyTheme();decor();decor2();decor3();decor4();decor5();initWater();showStage();got=0;escN=0;riskN=0;hidden=false;aware=0;stones=keep?ss:3;mir=keep?sm:0;crk=keep?crk:0;orb=keep?orb:0;crkT=0;crkL.intensity=0;freezeT=0;eAct=null;bfsKey='';mapHave=false;mapOpen=false;mapDirty=true;visited.fill(0);exitSeen=false;$('mapc').classList.add('hide');eSpeed=2;noticed=0;used=0;tStart=performance.now();card=keep?sc0:null;ghost=0;swift=0;showCard();$('stn').textContent=stones;$('hideov').classList.add('hide');$('rel').textContent=0;$('need').textContent=NEED;$('mode-tag').innerHTML=(MP.inGame?'<span style="color:'+mpCol(MP.id)+'">●</span> マルチプレイ'+PN+'人（あなたは'+AVN[mpCI(MP.id)%4]+'）':MODES[mode])+' / '+DF.n+' / 第'+(INFM()?depth:stg)+'回廊'+(INFM()?' / 目安 '+parTxt():'');{const sp0=mpSpawn();P.x=sp0[0]*CS;P.z=sp0[1]*CS}P.yaw=-Math.PI/2*0;P.pitch=0;P.bat=keep?Math.min(100,sb+50):100;P.sta=100;P.on=true;
  let ex,ey;do{[ex,ey]=free()}while(Math.hypot(ex-1,ey-1)<10);E={x:ex*CS,z:ey*CS};eMode='wander';eTarget=[ex,ey];lost=0;
- const dirs=[[0,-1],[1,0],[0,1],[-1,0]];if(MP.inGame){ent.visible=false;rng=Math.random;mpSpawnAvatars()}state='play';say('第'+stg+'回廊 — '+IN()+'を'+NEED+IC()+'、集めろ（赤い'+IN()+'は罠だが報酬がある）',5000);}
-function die(){if(state!=='play'||MP.inGame)return;if(card==='decoy'){card=null;showCard();let c;do{c=free()}while(Math.hypot(c[0]*CS-P.x,c[1]*CS-P.z)<30&&Math.random()<.9);E.x=c[0]*CS;E.z=c[1]*CS;eMode='wander';eTarget=null;eAct=null;aware=0;hideT=0;burst(.8,.7,3000,0,.5);tone(300,0,1,.3,'square',60,.5);say('身代わりの札が砕けた…',3000);return}state='dead';$('flash').style.opacity=1;hidden=false;$('hideov').classList.add('hide');hush();burst(1.4,.9,7000,0,.5);tone(1100,0,1.1,.3,'sawtooth',140,.5);tone(1170,0,1.1,.25,'sawtooth',150,.5);tone(90,0,1.6,.6,'square',35,.4);
+ const dirs=[[0,-1],[1,0],[0,1],[-1,0]];if(MP.inGame){ent.visible=false;rng=Math.random;mpSpawnAvatars()}state='play';say('第'+(INFM()?depth:stg)+'回廊 — '+IN()+'を'+NEED+IC()+'、集めろ（赤い'+IN()+'は罠だが報酬がある）',5000);}
+function die(){if(state!=='play'||MP.inGame)return;if(card==='decoy'){card=null;showCard();let c;do{c=free()}while(Math.hypot(c[0]*CS-P.x,c[1]*CS-P.z)<30&&Math.random()<.9);E.x=c[0]*CS;E.z=c[1]*CS;eMode='wander';eTarget=null;eAct=null;aware=0;hideT=0;burst(.8,.7,3000,0,.5);tone(300,0,1,.3,'square',60,.5);say('身代わりの札が砕けた…',3000);return}state='dead';$('flash').style.opacity=1;hidden=false;$('hideov').classList.add('hide');hush();burst(1.4,.9,7000,0,.5);tone(1100,0,1.1,.3,'sawtooth',140,.5);tone(1170,0,1.1,.25,'sawtooth',150,.5);tone(90,0,1.6,.6,'square',35,.4);if(!INFM())recDeath(false);
  const dx=E.x-P.x,dz=E.z-P.z;P.yaw=Math.atan2(-dx,-dz);P.pitch=.35;
- setTimeout(()=>{$('flash').style.opacity=0;$('et').textContent='喰われた';$('ed').textContent=IN()+' '+got+'/'+NEED+' — 「それ」は今もそこにいる。';endBtns(1,0,1);$('end').classList.remove('hide');document.exitPointerLock&&document.exitPointerLock()},1300)}
+ setTimeout(()=>{$('flash').style.opacity=0;$('et').textContent='喰われた';if(INFM()){$('ed').innerHTML=infDead();endBtns(1,0,0)}else{$('ed').textContent=IN()+' '+got+'/'+NEED+' — 「それ」は今もそこにいる。';endBtns(1,0,1);if(!TOUCH)$('ed').textContent+=' [R] か [Enter] でやり直し'}$('end').classList.remove('hide');deadAt=performance.now();const rb=INFM()?$('again'):$('retry');rb.classList.add('big');try{rb.focus({preventScroll:true})}catch(_){}document.exitPointerLock&&document.exitPointerLock()},1300)}
 function interact(){if(hidden){hidden=false;$('hideov').classList.add('hide');P.x=hidePrev.x;P.z=hidePrev.z;tone(200,0,.15,.1,'square',150);return}
  const l=lockers.find(l=>Math.hypot(l.cx-P.x,l.cz-P.z)<2.2);if(!l)return;
  hidden=true;hideT=0;hidePrev={x:l.cx,z:l.cz};P.x=l.x;P.z=l.z;P.yaw=Math.atan2(l.x-l.cx,l.z-l.cz);P.pitch=0;$('hideov').classList.remove('hide');tone(160,0,.2,.15,'square',110);
@@ -457,11 +468,16 @@ function arrive(){const lk=eTarget&&eTarget.lk,inv=eTarget&&eTarget.inv,r=Math.r
  if(inv||r<.45){eAct={t:inv?4.5:3.5};return}
  if(r<.75){let best=null,bd=1e9;lockers.forEach(l=>{const d=Math.hypot(l.cx-E.x,l.cz-E.z);if(d>4&&d<48&&d<bd){bd=d;best=l}});if(best){eTarget=[cellOf(best.cx),cellOf(best.cz)];eTarget.lk=best}}}
 function near(){for(let i=0;i<30;i++){const c=free();if(Math.hypot(c[0]-cellOf(P.x),c[1]-cellOf(P.z))<7)return c}return free()}
-function risk(){stones=Math.min(9,stones+2);P.bat=Math.min(100,P.bat+25);$('stn').textContent=stones;tone(95,0,2,.5,'sawtooth',40,.7);burst(1,.5,900,0,.6);aware=1;mpEv({t:'al'});say('警報が鳴り響く！ 小石+2 電池+25',3500)}
+function risk(){riskN++;stones=Math.min(9,stones+2);P.bat=Math.min(100,P.bat+25);$('stn').textContent=stones;tone(95,0,2,.5,'sawtooth',40,.7);burst(1,.5,900,0,.6);aware=1;mpEv({t:'al'});say('警報が鳴り響く！ 小石+2 電池+25',3500)}
 const STAGE={2:'足音が速くなった…',3:'灯りが不安定になる…',4:'「それ」がこちらを探し始めた'};
 function stage(){const s=got<NEED?STAGE[got]:null;if(s)setTimeout(()=>{if(state==='play')say(s,3500)},3600)}
 const rankOf=s=>s>=700?'S':s>=500?'A':s>=300?'B':'C';
-function result(fin){const sec=Math.round((performance.now()-(fin?runStart:tStart))/1000),st=Math.round((performance.now()-tStart)/1000),sc=Math.max(0,Math.round((1000-st*1.5-noticed*100-used*30)*DF.m)),key=mode==='daily'?'hc2-day-'+dayStr():'hc2-best-'+mode;let best=0,nw=false;total+=sc;totN+=noticed;totU+=used;const fs=fin?Math.max(0,Math.round(total/STAGES)-retries*40):sc;
+function infGet(){let r=null,h=0;try{r=JSON.parse(localStorage.getItem('hc2-inf')||'null');h=+localStorage.getItem('hc2-best-inf')||0}catch(e){}const n=v=>{v=+v;return isFinite(v)&&v>0?Math.floor(v):0};r=r&&typeof r==='object'&&!Array.isArray(r)?r:{};return{b:Math.max(n(r.b),n(h)),s:n(r.s),n:n(r.n),c:n(r.c)}}
+function infSave(r){try{localStorage.setItem('hc2-inf',JSON.stringify(r));localStorage.setItem('hc2-best-inf',r.b)}catch(e){}}
+function infDead(){const c=depth-1,r=infGet();return '無限モード・'+DF.n+'<br>踏破した回廊 <b>'+c+'</b>（最高 '+Math.max(r.b,c)+'）<br>累計スコア '+total+'（最高 '+Math.max(r.s,total)+'）<br>「それ」は今もそこにいる。'}
+function infWin(sc0,st){const par=parSec(),tp=Math.max(0,600+Math.max(-600,Math.min(150,(par-st)*1.5))),bonus=Math.round(depth*100*DF.m),sc=Math.max(0,Math.round((tp-noticed*80-used*20)*DF.m))+bonus;total+=sc;totN+=noticed;totU+=used;const r=infGet(),nw=depth>r.b;if(nw)r.b=depth;if(total>r.s)r.s=total;r.c++;infSave(r);return '扉は開いた。さらに深い回廊が待っている。<br><br>無限モード・'+DF.n+'・第'+depth+'回廊（'+THEMES[stg-1].n+'・迷路 '+N+'×'+N+'）<br>時間 '+((st/60)|0)+'分'+(st%60)+'秒（目安 '+parTxt()+(st<=par?'・達成':'・超過')+'） ／ 気づかれた '+noticed+'回 ／ 小石 '+used+'個<br>この回廊のスコア '+sc+'（深度ボーナス +'+bonus+'）　累計 '+total+(nw?'<br>最高到達を更新':'<br>最高到達 第'+r.b+'回廊')}
+function infHtml(){const r=infGet();return '<p>無限モード　最高到達 '+(r.b?'第'+r.b+'回廊':'―')+'　／　最高累計スコア '+(r.s||'―')+'　／　挑戦 '+r.n+'回　／　踏破 '+r.c+'回廊</p>'}
+function result(fin){const sec=Math.round((performance.now()-(fin?runStart:tStart))/1000),st=Math.round((performance.now()-tStart)/1000),sc=Math.max(0,Math.round((1000-st*1.5-noticed*100-used*30)*DF.m)),key=mode==='daily'?'hc2-day-'+dayStr():'hc2-best-'+mode;let best=0,nw=false;if(INFM())return infWin(sc,st);recWin(sc,st);total+=sc;totN+=noticed;totU+=used;const fs=fin?Math.max(0,Math.round(total/STAGES)-retries*40):sc;
  if(!fin){const rk=rankOf(sc),t=[];if(noticed===0)t.push('ghost');if(used===0)t.push('ascetic');if(st<=120)t.push('swift');if(rk==='S'&&noticed===0&&used===0)t.push('perfect');return '扉は開いた。<br><br>'+MODES[mode]+'・'+DF.n+'・第'+stg+'回廊<br>時間 '+((st/60)|0)+'分'+(st%60)+'秒 ／ 気づかれた '+noticed+'回 ／ 小石 '+used+'個<br>この回廊のスコア '+sc+'（累計 '+total+'）　ランク <b>'+rk+'</b>'+(t.length?'<br><br>称号 '+earnTitles(t):'')}
  noticed=totN;used=totU;
  try{best=+localStorage.getItem(key)||0;if(fs>best){localStorage.setItem(key,fs);best=fs;nw=true}}catch(e){if(fs>best){best=fs;nw=true}}
@@ -472,9 +488,38 @@ function dayStreak(){let n=0;for(let i=0;i<400;i++){const d=new Date();d.setDate
 const TITLES={ghost:['気づかれぬ者','一度も「それ」に気づかれずに脱出'],ascetic:['無欲の者','小石を1つも使わずに脱出'],swift:['疾き者','1つの回廊を2分以内に脱出'],perfect:['虚ろを歩む者','Sランク・気づかれず・小石なし・やり直しなしで踏破'],master:['回廊の主','全5回廊をAランク以上・やり直しなしで踏破'],survivor:['生還者','全5回廊を踏破'],daily:['日課の者','デイリーを3日連続でクリア']};
 function getTitles(){try{return JSON.parse(localStorage.getItem('hc2-titles')||'[]')}catch(e){return[]}}
 function earnTitles(ids){let have=getTitles();const nw=ids.filter(i=>!have.includes(i));if(nw.length){have=have.concat(nw);try{localStorage.setItem('hc2-titles',JSON.stringify(have))}catch(e){}}showTitles();return ids.map(i=>'「'+TITLES[i][0]+'」'+(nw.includes(i)?'<b>（新）</b>':'')).join(' ')}
-function showTitles(){const el=$('ttl');if(!el)return;const h=getTitles();el.textContent='称号 '+h.length+' / '+Object.keys(TITLES).length+(h.length?'　'+h.map(i=>TITLES[i]?TITLES[i][0]:'').filter(Boolean).join('・'):'');el.title=Object.values(TITLES).map(t=>t[0]+'：'+t[1]).join('\n')}
-function showBest(){for(const k in MODES){let b=0;try{b=+localStorage.getItem(k==='daily'?'hc2-day-'+dayStr():'hc2-best-'+k)||0}catch(e){}const el=$('bst-'+k);if(!el)continue;if(k==='daily'){const sk=dayStreak();el.textContent=(b?'今日の記録 '+rankOf(b)+'（'+b+'）':'今日は未挑戦')+(sk?'／連続 '+sk+'日':'')}else el.textContent=b?'自己ベスト '+rankOf(b)+'（'+b+'）':''}showTitles()}
+const BADGES={first:['初めての脱出','いずれかの回廊を脱出'],chase3:['逃げ切る者','1つの回廊で「それ」に追われて3回逃げ切る'],locker:['息を殺す者','ロッカーに隠れて追跡をやり過ごす'],redall:['罠を恐れぬ者','赤い護符を2つとも取って脱出'],hard:['恐れ知らず','「むずかしい」で脱出'],daily:['今日の挑戦者','今日の挑戦を脱出'],deep5:['深淵への一歩','無限モードで第5回廊を脱出'],deep10:['深淵の住人','無限モードで第10回廊を脱出'],mpwin:['仲間と共に','マルチプレイで脱出']};
+let bgNew=[],escN=0,riskN=0;
+function getBadges(){try{const a=JSON.parse(localStorage.getItem('hc2-badges')||'[]');return Array.isArray(a)?a:[]}catch(e){return[]}}
+function badge(id,quiet){if(!BADGES[id])return false;const h=getBadges();if(h.includes(id))return false;h.push(id);try{localStorage.setItem('hc2-badges',JSON.stringify(h))}catch(e){}if(quiet)bgNew.push(id);else{say('実績解除「'+BADGES[id][0]+'」',3500);chime()}return true}
+function bgFlush(){const a=bgNew.map(i=>BADGES[i][0]);bgNew=[];return a.length?'<br><br>実績解除 '+a.join('・'):''}
+function escOk(h){if(MP.inGame)return;escN++;if(h)badge('locker');if(escN>=3)badge('chase3')}
+function winBadges(){if(MP.inGame)return '';badge('first',1);if(INFM()){if(depth>=5)badge('deep5',1);if(depth>=10)badge('deep10',1)}if(riskN>=2)badge('redall',1);if(diff==='hard'&&mode!=='daily')badge('hard',1);if(mode==='daily')badge('daily',1);return bgFlush()}
+function badgeHtml(){const h=getBadges();return '<p>実績 '+h.filter(i=>BADGES[i]).length+' / '+Object.keys(BADGES).length+'</p><div class="bdg">'+Object.keys(BADGES).map(i=>h.includes(i)?'<span class="on">✓ '+BADGES[i][0]+'</span>':'<span>― '+BADGES[i][0]+'：'+BADGES[i][1]+'</span>').join('')+'</div>'}
+function showTitles(){const el=$('ttl');if(!el)return;const h=getTitles();el.textContent='称号 '+h.length+' / '+Object.keys(TITLES).length+(h.length?'　'+h.map(i=>TITLES[i]?TITLES[i][0]:'').filter(Boolean).join('・'):'')+'　実績 '+getBadges().filter(i=>BADGES[i]).length+' / '+Object.keys(BADGES).length;el.title=Object.values(TITLES).map(t=>t[0]+'：'+t[1]).join('\n')}
+function showBest(){for(const k in MODES){let b=0;try{b=+localStorage.getItem(k==='daily'?'hc2-day-'+dayStr():'hc2-best-'+k)||0}catch(e){}const el=$('bst-'+k);if(!el)continue;if(k==='daily'){const sk=dayStreak();el.textContent=(b?'今日の記録 '+rankOf(b)+'（'+b+'）':'今日は未挑戦')+(sk?'／連続 '+sk+'日':'')}else if(k==='inf')el.textContent=b?'最高到達 第'+b+'回廊':'';else el.textContent=b?'自己ベスト '+rankOf(b)+'（'+b+'）':''}showTitles()}
 showBest();
+// ---- 記録画面 ----
+const REC_KEY='hc2-rec';
+function recGet(){let r=null;try{r=JSON.parse(localStorage.getItem(REC_KEY)||'null')}catch(e){}if(!r||typeof r!=='object'||Array.isArray(r))r={};const n=v=>{v=+v;return isFinite(v)&&v>0?Math.floor(v):0};r.s=(r.s&&typeof r.s==='object')?r.s:{};for(let i=1;i<=5;i++){const q=(r.s[i]&&typeof r.s[i]==='object')?r.s[i]:{};r.s[i]={w:n(q.w),d:n(q.d),b:n(q.b),t:n(q.t)}}r.f=n(r.f);r.n=n(r.n);const m=(r.mp&&typeof r.mp==='object')?r.mp:{};r.mp={m:n(m.m),e:n(m.e),d:n(m.d)};return r}
+function recSave(r){try{localStorage.setItem(REC_KEY,JSON.stringify(r))}catch(e){}}
+function recWin(sc,st){if(MP.inGame||!(stg>=1&&stg<=5))return;const r=recGet(),q=r.s[stg];q.w++;if(sc>q.b)q.b=Math.round(sc);if(st>0&&(!q.t||st<q.t))q.t=Math.round(st);r.n+=noticed|0;if(stg>=STAGES)r.f++;recSave(r)}
+function recDeath(mp){const r=recGet();if(mp)r.mp.d++;else if(stg>=1&&stg<=5)r.s[stg].d++;recSave(r)}
+function recMp(k){const r=recGet();if(k in r.mp)r.mp[k]++;recSave(r)}
+const recFmt=sec=>sec?((sec/60)|0)+':'+String(sec%60).padStart(2,'0'):'―';
+function showRec(){const r=recGet();let w=0,d=0;
+ const rows=[1,2,3,4,5].map(i=>{const q=r.s[i];w+=q.w;d+=q.d;return '<tr><td>第'+i+'回廊</td><td>'+(q.b?rankOf(q.b)+'（'+q.b+'）':'―')+'</td><td>'+recFmt(q.t)+'</td><td>'+q.w+'</td><td>'+q.d+'</td></tr>'}).join('');
+ const bests=['random','fixed'].map(k=>{let b=0;try{b=+localStorage.getItem('hc2-best-'+k)||0}catch(e){}return MODES[k]+' '+(b?rankOf(b)+'（'+b+'）':'―')}).join('　／　'),sk=dayStreak(),tl=getTitles().filter(i=>TITLES[i]).length;
+ $('recbody').innerHTML='<table><thead><tr><th>回廊</th><th>ベスト</th><th>最速</th><th>脱出</th><th>捕まった</th></tr></thead><tbody>'+rows+'<tr class="tot"><td>合計</td><td>―</td><td>―</td><td>'+w+'</td><td>'+d+'</td></tr></tbody></table>'
+ +'<p>全5回廊の踏破 '+r.f+'回　／　気づかれた通算 '+r.n+'回</p>'
+ +'<p>自己ベスト（全5回廊）　'+bests+'</p>'
+ +'<p>デイリー連続 '+sk+'日　／　称号 '+tl+' / '+Object.keys(TITLES).length+'</p>'
+ +'<p>マルチプレイ　参加 '+r.mp.m+'試合　／　脱出 '+r.mp.e+'回　／　捕まった '+r.mp.d+'回</p>'+infHtml()+badgeHtml()}
+function openRec(){showRec();$('start').inert=true;$('recscr').classList.remove('hide');$('reccls').focus()}
+function closeRec(){$('recscr').classList.add('hide');$('start').inert=false;$('recb').focus()}
+$('recb').addEventListener('click',openRec);$('reccls').addEventListener('click',closeRec);
+$('recclr').addEventListener('click',()=>{if(confirm('回廊ごとの記録と通算回数を消します。自己ベストと称号は残ります。よろしいですか？')){try{localStorage.removeItem(REC_KEY)}catch(e){}showRec()}});
+addEventListener('keydown',e=>{if(e.code==='Escape'&&!$('recscr').classList.contains('hide'))closeRec()});
 const CARDS={ghost:'隠形の札',swift:'疾風の札',decoy:'身代わりの札'};
 function showCard(){$('crd').textContent=card?CARDS[card]:'なし';$('mir').textContent=mir;$('ck').textContent=crk;$('ob').textContent=orb;$('mp').textContent=mapHave?1:0}
 function useCard(){if(state!=='play'||!card||card==='decoy')return;if(card==='ghost')ghost=10;else swift=8;tone(520,0,1.4,.12,'sine',780,.8);say(CARDS[card]+'を使った',2000);card=null;showCard()}
@@ -512,7 +557,7 @@ function updScream(dt){scT+=dt;if(scT<scNext)return;scT=0;scNext=90+Math.random(
 function applyTheme(){const H=THEMES[stg-1];scene.fog.color.set(H.fog);scene.fog.density=fogD=H.d;scene.background.set(H.fog);amb.color.set(H.amb[0]);amb.intensity=H.amb[1]*OPT.bright;spot.color.set(H.sp);fill.color.set(H.fl);wallM.color.set(H.wall);floorM.color.set(H.floor);ceilM.color.set(H.floor);
  ent.children[1].material.color.set(H.head);ent.children[2].material.color.set(H.eye);entLight.color.set(H.el);ent.scale.set(H.sc[0],H.sc[1],H.sc[2]);BF=H.bf;spot.distance=stg===4?16:30;ambience();skinItems()}
 let stT;const HINTS=['耳をすませて進もう。ときどき停電し、遠くで物音がする','水位が少しずつ上がる。上がるほど動きが重く、足音が響く','配管から蒸気が噴き出す。視界は悪くなるが、「それ」からも見つかりにくい','霧が灯りを弱める。足音は響き、遠くまで届く','空間がねじれ、ときどき向きが変わる。慌てず方角を確かめよう'];
-function showStage(){const c=$('stcard');c.innerHTML='<small>第'+stg+'回廊</small><b>'+THEMES[stg-1].n+'</b><small style="letter-spacing:.12em;font-size:13px;margin:16px 0 0">'+HINTS[stg-1]+'</small>';c.style.opacity=1;clearTimeout(stT);stT=setTimeout(()=>{c.style.opacity=0},5200)}
+function showStage(){const c=$('stcard');c.innerHTML='<small>第'+(INFM()?depth:stg)+'回廊</small><b>'+THEMES[stg-1].n+'</b><small style="letter-spacing:.12em;font-size:13px;margin:16px 0 0">'+HINTS[stg-1]+'</small>';c.style.opacity=1;clearTimeout(stT);stT=setTimeout(()=>{c.style.opacity=0},5200)}
 const AM=[{lp:330,rg:.6,wg:.05,wf:420,pr:1,tr:0},{lp:240,rg:.95,wg:.03,wf:260,pr:.92,tr:0},{lp:620,rg:.45,wg:.02,wf:300,pr:1,tr:2.2},{lp:260,rg:1.4,wg:.11,wf:700,pr:.97,tr:0},{lp:420,rg:1,wg:.04,wf:380,pr:1.12,tr:.35}];
 function ambience(){if(!AC||!AMB.lp)return;const a=AM[stg-1],t=AC.currentTime;AMB.lp.frequency.setTargetAtTime(a.lp,t,1);AMB.rg.gain.setTargetAtTime(a.rg,t,1);AMB.wg.gain.setTargetAtTime(a.wg,t,1);AMB.wf.frequency.setTargetAtTime(a.wf,t,1);AMB.oscs.forEach(([o,f,l,lb])=>{o.frequency.setTargetAtTime(f*a.pr,t,1.5);l.frequency.setTargetAtTime(a.tr||lb,t,1)})}
 function ambExtra(pn,r){if(stg===1){if(r<.5){const f=1500+Math.random()*700;tone(f,0,.07,.045,'sine',f*.6,.8);tone(f*.9,.5,.06,.03,'sine',f*.55,.8)}else burst(.18,.07,500,pn,.7)}else if(stg===3){if(r<.45){tone(420,0,.5,.05,'square',380,.7);tone(630,.04,.4,.03,'square',600,.7);burst(.1,.08,1800,pn,.6)}}else if(stg===5){if(r<.6)burst(1.1,.05,1500+Math.random()*900,pn,.9)}}
@@ -780,7 +825,7 @@ function toggleMap(){if(state!=='play')return;if(!mapHave){say('地図を持っ�
 function jt(a,b){const v=Math.sin(a*127.1+b*311.7)*43758.5453;return v-Math.floor(v)-.5}
 function trackMap(){const cx=cellOf(P.x),cy=cellOf(P.z);let ch=false;
  const mark=(x,y)=>{if(x<0||y<0||x>=N||y>=N||g[y][x])return;const i=y*N+x;if(!visited[i]){visited[i]=1;ch=true}};
- mark(cx,cy);[[1,0],[-1,0],[0,1],[0,-1]].forEach(([a,b])=>mark(cx+a,cy+b));
+ mark(cx,cy);[[1,0],[-1,0],[0,1],[0,-1]].forEach(([a,b])=>mark(cx+a,cy+b));if(INFM()&&N>=21)[[2,0],[-2,0],[0,2],[0,-2]].forEach(([a,b])=>{const mx=cx+a/2,my=cy+b/2;if(mx>=0&&my>=0&&mx<N&&my<N&&!g[my][mx])mark(cx+a,cy+b)});
  relics.forEach(o=>{if(o.visible&&!o.userData.seen&&Math.hypot(o.position.x-P.x,o.position.z-P.z)<6&&los(P.x,P.z,o.position.x,o.position.z))o.userData.seen=true});
  const ex=world.userData.exit;if(!exitSeen&&Math.hypot(ex.position.x-P.x,ex.position.z-P.z)<7&&los(P.x,P.z,ex.position.x,ex.position.z))exitSeen=true;
  if(ch)mapDirty=true;if(mapOpen)drawMap()}
@@ -798,7 +843,7 @@ function drawMap(){const c=$('mapc'),W=c.width,cs=W/N,x=c.getContext('2d');
  if(exitSeen){const e=world.userData.exit;x.strokeStyle='#60e090';x.lineWidth=2;x.strokeRect((e.position.x/CS+.5)*cs-5,(e.position.z/CS+.5)*cs-5,10,10)}
  const px=(P.x/CS+.5)*cs,py=(P.z/CS+.5)*cs,a=Math.atan2(-Math.cos(P.yaw),-Math.sin(P.yaw));x.save();x.translate(px,py);x.rotate(a);x.fillStyle='#f0e0a8';x.beginPath();x.moveTo(8,0);x.lineTo(-5,-5);x.lineTo(-3,0);x.lineTo(-5,5);x.closePath();x.fill();x.restore();
  x.fillStyle='#a89870';x.font='12px serif';x.fillText('第'+stg+'回廊',8,16)}
-function win(){state='won';hush();chime();tone(330,.3,3,.1,'sine',330,.9);tone(494,.3,3,.08,'sine',494,.9);const fin=stg>=STAGES;if(MP.inGame){mpEscape();mpGoSpec('脱出成功')}else{$('ed').innerHTML=result(fin);$('et').textContent=fin?'脱出':'第'+stg+'回廊 脱出';endBtns(fin,!fin,0);$('end').classList.remove('hide')}document.exitPointerLock&&document.exitPointerLock()}
+function win(){state='won';hush();chime();tone(330,.3,3,.1,'sine',330,.9);tone(494,.3,3,.08,'sine',494,.9);const fin=!INFM()&&stg>=STAGES;if(MP.inGame){mpEscape();badge('mpwin');recMp('e');mpGoSpec('脱出成功')}else{$('ed').innerHTML=result(fin)+winBadges();$('et').textContent=fin?'脱出':'第'+(INFM()?depth:stg)+'回廊 脱出';endBtns(fin,!fin,0);$('end').classList.remove('hide')}document.exitPointerLock&&document.exitPointerLock()}
 
 // ---- Multiplayer (Phase 1: room & connection) ----
 const MP={role:null,id:-1,peers:{},roster:[],pend:null,hostDc:null,hostPc:null,started:false,leaving:false,iv:0,inGame:false,seed:0,snap:{},av:{},tt:0,taken:{},esc:{},en:[],enM:[],fz:false,dead:{},pl:{},enemies:null,crk:null,freeze:0};
@@ -981,7 +1026,7 @@ function mpAI(dt){if(!MP.inGame||MP.role!=='host'||!MP.enemies)return;
 function mpDirect(m){if(m.k==='sg'){stinger(m.d);noticed++}else if(m.k==='cap')mpCaptured(m.e);else if(m.k==='tx')say(m.t,m.ms||2800);else if(m.k==='ph')mpPhantom(m)}
 function mpCaptured(idx){if(state==='paused'){$('pause').classList.add('hide');state='play';if(AC)AC.resume()}if(state!=='play')return;
  if(card==='decoy'){card=null;showCard();burst(.8,.7,3000,0,.5);tone(300,0,1,.3,'square',60,.5);say('身代わりの札が砕けた…',3000);mpEv({t:'sv',e:idx});return}
- state='dead';mpEv({t:'dd'});$('flash').style.opacity=1;hidden=false;$('hideov').classList.add('hide');hush();burst(1.4,.9,7000,0,.5);tone(1100,0,1.1,.3,'sawtooth',140,.5);tone(1170,0,1.1,.25,'sawtooth',150,.5);tone(90,0,1.6,.6,'square',35,.4);
+ state='dead';mpEv({t:'dd'});$('flash').style.opacity=1;hidden=false;$('hideov').classList.add('hide');hush();burst(1.4,.9,7000,0,.5);tone(1100,0,1.1,.3,'sawtooth',140,.5);tone(1170,0,1.1,.25,'sawtooth',150,.5);tone(90,0,1.6,.6,'square',35,.4);recDeath(true);
  const q=MP.en[idx];if(q){P.yaw=Math.atan2(-(q[0]-P.x),-(q[1]-P.z));P.pitch=.35}
  setTimeout(()=>{if(state==='dead'&&!MP.fin)mpGoSpec('喰われた')},1300)}
 // ---- Shared-fear: phantoms only one player perceives ----
@@ -1031,7 +1076,7 @@ function mpTick(dt){if(!MP.inGame||!world)return;mpPhUpdate(dt);MP.tt+=dt;const 
  for(const id in MP.av){const v=MP.av[id],u=v.userData;v.position.x+=(u.tx-v.position.x)*k;v.position.z+=(u.tz-v.position.z)*k;v.rotation.y+=(((u.ty+Math.PI-v.rotation.y+Math.PI*3)%(Math.PI*2))-Math.PI)*k;v.visible=!u.hid&&!u.dead&&!MP.dead[id]&&!MP.esc[id];u.lamp.intensity=u.on?.9:0;v.scale.y+=((u.cr?.7:1)-v.scale.y)*k}
  if(state==='spec'&&MP.spec!=null&&MP.av[MP.spec]){const sv=MP.av[MP.spec];sv.visible=false;sv.userData.lamp.intensity=0}
  for(let i=0;i<MP.enM.length;i++){const g=MP.enM[i],u=g.userData;if(!u.init)continue;g.position.x+=(u.tx-g.position.x)*k;g.position.z+=(u.tz-g.position.z)*k;g.rotation.y+=(((u.th-g.rotation.y+Math.PI*3)%(Math.PI*2))-Math.PI)*k;g.children[0].rotation.z=Math.sin(T*3+i)*.05;g.position.y=MP.fz?0:Math.abs(Math.sin(T*6+i))*.04;const lt=u.lt||(u.lt=g.children.find(c=>c.isLight));if(lt)lt.intensity=.3+Math.random()*.4}}
-function mpBegin(o){MP.rmGone=0;MP.taken={};MP.esc={};MP.started=true;MP.inGame=true;MP.seed=o.seed>>>0;MP.roster=o.r;PN=o.n;MP.snap={};MP.av={};MP.tt=0;
+function mpBegin(o){recMp('m');MP.rmGone=0;MP.taken={};MP.esc={};MP.started=true;MP.inGame=true;MP.seed=o.seed>>>0;MP.roster=o.r;PN=o.n;MP.snap={};MP.av={};MP.tt=0;
  audioInit();if(AC.state==='suspended')AC.resume();
  $('mpscr').classList.add('hide');$('start').classList.remove('intro');$('start').classList.add('hide');$('end').classList.add('hide');
  if(tg)tg.visible=false;scene.fog.density=.1;$('mode-tag').classList.remove('hide');$('bar').classList.remove('hide');
@@ -1054,7 +1099,7 @@ $('mp-back').addEventListener('click',()=>{if(MP.role){mpLeave('');return}$('mps
 try{$('mp-name').value=localStorage.getItem('hc-name')||''}catch(_){}
 $('mp-name').addEventListener('input',()=>{try{localStorage.setItem('hc-name',$('mp-name').value)}catch(_){}});
 ['mp-name','mp-in','mp-out','mp-rc'].forEach(id=>['keydown','keyup'].forEach(t=>$(id).addEventListener(t,e=>e.stopPropagation())));
-function begin(){DF=mode==='daily'?DIFFS.normal:DIFFS[diff];audioInit();if(AC.state==='suspended')AC.resume();$('start').classList.remove('intro');$('start').classList.add('hide');$('end').classList.add('hide');if(tg)tg.visible=false;scene.fog.density=.1;$('mode-tag').classList.remove('hide');$('bar').classList.remove('hide');stg=1;total=0;totN=0;totU=0;retries=0;runStart=performance.now();start(false);showTouch();lockPtr()}
+function begin(){DF=mode==='daily'?DIFFS.normal:DIFFS[diff];audioInit();if(AC.state==='suspended')AC.resume();$('start').classList.remove('intro');$('start').classList.add('hide');$('end').classList.add('hide');if(tg)tg.visible=false;scene.fog.density=.1;$('mode-tag').classList.remove('hide');$('bar').classList.remove('hide');stg=1;depth=1;$('again').classList.remove('big');if(mode==='inf'){const r0=infGet();r0.n++;infSave(r0)}total=0;totN=0;totU=0;retries=0;runStart=performance.now();start(false);showTouch();lockPtr()}
 $('go').addEventListener('click',begin);
 document.querySelectorAll('button.mode').forEach(b=>b.addEventListener('click',()=>{mode=b.dataset.m;document.querySelectorAll('button.mode').forEach(x=>{const on=x===b;x.classList.toggle('on',on);x.setAttribute('aria-checked',on)});document.querySelector('.diffs').classList.toggle('off',mode==='daily');audioInit();if(AC.state==='suspended')AC.resume();tone(110,0,.5,.15,'sine',70)}));
 document.querySelectorAll('button.diff').forEach(b=>b.addEventListener('click',()=>{diff=b.dataset.d;DF=DIFFS[diff];document.querySelectorAll('button.diff').forEach(x=>{const on=x===b;x.classList.toggle('on',on);x.setAttribute('aria-checked',on)});audioInit();if(AC.state==='suspended')AC.resume();tone(130,0,.4,.12,'sine',90)}));
@@ -1063,9 +1108,11 @@ function toTitle(){DF=DIFFS[diff];mpEnd('');$('spec').classList.add('hide');setM
 $('home').addEventListener('click',toTitle);
 function endBtns(a,n,r){$('rematch').classList.add('hide');$('rm').classList.add('hide');setMap(false);$('bar').classList.add('hide');$('tc').classList.add('hide');$('again').classList.toggle('hide',!a);$('next').classList.toggle('hide',!n);$('retry').classList.toggle('hide',!r)}
 function resume(){audioInit();if(AC.state==='suspended')AC.resume();$('end').classList.add('hide');$('bar').classList.remove('hide');start(true);showTouch();lockPtr()}
-$('next').addEventListener('click',()=>{stg++;resume()});
-$('retry').addEventListener('click',()=>{retries++;resume()});
-addEventListener('keydown',e=>{if(e.code==='Enter'&&e.target.tagName!=='BUTTON'&&state==='menu'&&!$('start').classList.contains('hide')&&$('set').classList.contains('hide'))begin()});
+$('next').addEventListener('click',()=>{if(INFM()){depth++;stg=(depth-1)%5+1}else stg++;resume()});
+let deadAt=0;
+$('retry').addEventListener('click',()=>{if(performance.now()-deadAt<600)return;$('retry').classList.remove('big');retries++;resume()});
+addEventListener('keydown',e=>{if(state==='dead'&&!e.repeat&&!$('end').classList.contains('hide')&&!$('retry').classList.contains('hide')&&(e.code==='KeyR'||(e.code==='Enter'&&e.target.tagName!=='BUTTON')))$('retry').click()});
+addEventListener('keydown',e=>{if(e.code==='Enter'&&e.target.tagName!=='BUTTON'&&state==='menu'&&!$('start').classList.contains('hide')&&$('set').classList.contains('hide')&&$('recscr').classList.contains('hide'))begin()});
 $('c').addEventListener('click',()=>{if(state==='play'&&document.pointerLockElement!==$('c'))lockPtr()});
 addEventListener('mousemove',e=>{if(document.pointerLockElement!==$('c')||state!=='play'||hidden)return;P.yaw-=e.movementX*.0022*OPT.sens;P.pitch=Math.max(-1.3,Math.min(1.3,P.pitch-e.movementY*.0022*OPT.sens))});
 addEventListener('keydown',e=>{keys[e.code]=true;if(state==='play'){if(e.code==='KeyE')interact();if(e.code==='KeyQ'&&!hidden)throwStone();if(e.code==='KeyR')useCard();if(e.code==='KeyM')useMirror();if(e.code==='KeyG')throwCracker();if(e.code==='KeyT')useOrb();if(e.code==='KeyN')toggleMap();if(/^(Digit|Numpad)[1-6]$/.test(e.code)){sel=+e.code.slice(-1)-1;renderBar()}}if(e.code==='KeyF'&&state==='play'&&P.bat>0){P.on=!P.on;burst(.04,.5,5000);tone(220,0,.06,.12,'square',140,.05)}});
@@ -1098,16 +1145,16 @@ function loop(now){requestAnimationFrame(loop);const dt=Math.min((now-last)/1000
   bats.forEach((o,i)=>{if(o.visible&&Math.hypot(o.position.x-P.x,o.position.z-P.z)<1.3)pick('b',i,o)});
   const ex=world.userData.exit;if(Math.hypot(ex.position.x-P.x,ex.position.z-P.z)<2){if(got>=NEED)win();else say('封印されている',1500)}
   // entity AI
-  if(MP.inGame)mpNear();let spd=0;const dist=Math.hypot(E.x-P.x,E.z-P.z),vr0=(hidden||ghost>0)?0:(P.on?(cr?9:16):(cr?2.5:6)),fv=eMode==='chase'?1:Math.max(Math.hypot(E.x-P.x,E.z-P.z)<2.5?1:0,.25+.75*Math.pow((1+Math.cos(Math.atan2(P.x-E.x,P.z-E.z)-eHead))/2,1.2)),vr=freezeT>0?0:vr0*fv*(got>=NEED-1?1.25:1)*DF.v*(1+(stg-1)*.05)*(1-.4*stm),see=dist<vr&&los(E.x,E.z,P.x,P.z),hr=(eAct&&!eAct.l?1.6:1)*(sprint?14:(moving&&!cr?4.5:0))*(1+wLvl*.8)*(stg===4?1.3:1),hear=!hidden&&ghost<=0&&freezeT<=0&&dist<hr;
+  if(MP.inGame)mpNear();let spd=0;const dist=Math.hypot(E.x-P.x,E.z-P.z),vr0=(hidden||ghost>0)?0:(P.on?(cr?9:16):(cr?2.5:6)),fv=eMode==='chase'?1:Math.max(Math.hypot(E.x-P.x,E.z-P.z)<2.5?1:0,.25+.75*Math.pow((1+Math.cos(Math.atan2(P.x-E.x,P.z-E.z)-eHead))/2,1.2)),vr=freezeT>0?0:vr0*fv*(got>=NEED-1?1.25:1)*DF.v*(1+(stg-1)*.05)*(1-.4*stm)*szR(),see=dist<vr&&los(E.x,E.z,P.x,P.z),hr=szR()*(eAct&&!eAct.l?1.6:1)*(sprint?14:(moving&&!cr?4.5:0))*(1+wLvl*.8)*(stg===4?1.3:1),hear=!hidden&&ghost<=0&&freezeT<=0&&dist<hr;
   if(MP.inGame)spd=NEARSPD;if(alertE){alertE=false;if(!MP.inGame&&dist<16&&eMode!=='chase'){aware=Math.max(aware,.6);eTarget=[cellOf(P.x),cellOf(P.z)]}}
   if(!MP.inGame){if(see||hear){const k=see?(1-dist/vr)*2.2+.5:.9;aware=Math.min(1,aware+k*dt);lost=0;if(aware>.35&&eMode!=='chase')eTarget=[cellOf(P.x),cellOf(P.z)]}else aware=Math.max(0,aware-.35*dt);
   if(aware>=1&&eMode!=='chase'){stinger(dist);eMode='chase';lost=0;eAct=null;noticed++}
-  if(eMode==='chase'&&!(see||hear)){lost+=dt;if(lost>(hidden?1.5:6)){eMode='wander';eTarget=null;aware=0}}}
+  if(eMode==='chase'&&!(see||hear)){lost+=dt;if(lost>(hidden?1.5:6*szR())){escOk(hidden);eMode='wander';eTarget=null;aware=0}}}
   if(!MP.inGame&&hidden){hideT=dist<2.4?hideT+dt:0;if(hideT>2.5&&seenH)die()}
   $('aw').style.opacity=aware>.02?1:0;$('aw').firstChild.style.width=aware*100+'%';
   if(freezeT>0){freezeT-=dt;if(freezeT<=0){entLight.color.set(THEMES[stg-1].el);ent.children[2].material.color.set(THEMES[stg-1].eye)}}
   if(crkT>0){crkT-=dt;crkL.intensity=1.6+Math.random()*1.2;popT-=dt;if(popT<=0){popT=.12+Math.random()*.35;const cd=Math.hypot(crkX-P.x,crkZ-P.z),pn=((crkX-P.x)*Math.cos(P.yaw)-(crkZ-P.z)*Math.sin(P.yaw))/Math.max(cd,.1);burst(.07,.9*Math.pow(Math.max(0,1-cd/40),1.5)+.03,5000,pn,.5);tone(1100+Math.random()*900,0,.05,.06*Math.max(.15,1-cd/40),'square',500,.3)}
-   if(!MP.inGame&&(eMode!=='chase'||!los(E.x,E.z,P.x,P.z))){if(eMode==='chase'){eMode='wander';aware=0}if(!eAct&&Math.hypot(E.x-crkX,E.z-crkZ)<45&&!(eTarget&&eTarget.cr)){eTarget=[cellOf(crkX),cellOf(crkZ)];eTarget.inv=1;eTarget.cr=1}}
+   if(!MP.inGame&&(eMode!=='chase'||!los(E.x,E.z,P.x,P.z))){if(eMode==='chase'){escOk(false);eMode='wander';aware=0}if(!eAct&&Math.hypot(E.x-crkX,E.z-crkZ)<45&&!(eTarget&&eTarget.cr)){eTarget=[cellOf(crkX),cellOf(crkZ)];eTarget.inv=1;eTarget.cr=1}}
    if(crkT<=0){if(crkM)world.remove(crkM);crkL.intensity=0}}
   if(!MP.inGame){const ec=[cellOf(E.x),cellOf(E.z)];let tc;
   if(eMode==='chase')tc=[cellOf(P.x),cellOf(P.z)];else{
