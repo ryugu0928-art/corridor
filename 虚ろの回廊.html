@@ -299,7 +299,7 @@ body:has(#bar.hide) #hud{display:none}
 <div class="scr hide" id="pause" role="dialog" aria-label="一時停止"><h1>一時停止</h1><p>Esc または P で再開できます。</p><div><button class="btn" id="pres">再開</button><button class="btn sub" id="pset">設定</button><button class="btn sub" id="ptit">タイトルへ</button></div></div>
 <div class="scr hide" id="set" role="dialog" aria-label="設定"><h1>設定</h1><div id="rows"></div><p>変更はすぐに反映され、このブラウザに保存されます。</p><div><button class="btn sub" id="rst">初期値に戻す</button><button class="btn" id="cls">閉じる</button></div></div>
 <div class="scr hide" id="recscr" role="dialog" aria-label="記録"><h1>記録</h1><div id="recbody"></div><div><button class="btn sub" id="recclr">記録を消す</button><button class="btn" id="reccls">閉じる</button></div></div>
-<div class="scr hide" id="mpscr" role="dialog" aria-label="マルチプレイ"><h1>マルチプレイ</h1><p class="mpn">同じWi‑Fi内の端末どうしで遊べます（2〜4人）。部屋コードの受け渡しにだけ、外部の仲介サービス（PeerJS）を使います。</p>
+<div class="scr hide" id="mpscr" role="dialog" aria-label="マルチプレイ"><h1>マルチプレイ</h1><p class="mpn">同じWi‑Fi内でも、離れた場所どうしのオンラインでも遊べます（2〜4人）。部屋コードの受け渡しと通信経路の確認に、外部の仲介サービス（PeerJS・STUN/TURN）を使います。</p>
 <div id="mp-v-menu"><div class="mprow"><label for="mp-name">名前</label><input class="mpi" id="mp-name" maxlength="8" placeholder="プレイヤー" autocomplete="off"></div><div><button class="btn" id="mp-host">部屋を作る</button><button class="btn" id="mp-join">部屋に参加</button></div></div>
 <div id="mp-v-room" class="hide"><div class="mp-h hide" id="mp-room"><div class="mpcl">部屋コード</div><div class="mpcode" id="mp-rcode" title="タップでコピー">――</div></div><div id="mp-gj" class="hide"><input class="mpi" id="mp-rc" maxlength="6" placeholder="部屋コード" aria-label="部屋コード" autocomplete="off" autocorrect="off" enterkeyhint="go" autocapitalize="characters" spellcheck="false"><button class="btn" id="mp-rj">入室</button></div><div id="mp-list"></div><div class="mp-h mp-man hide"><button class="btn sub" id="mp-inv">参加者を追加</button></div>
 <div id="mp-codes" class="mp-man"><div id="mp-bin"><label class="mpl" id="mp-l-in" for="mp-in">受け取ったコード</label><textarea class="mpt" id="mp-in" rows="3" spellcheck="false" autocomplete="off" autocapitalize="off"></textarea><div><button class="btn sub" id="mp-paste">貼り付け</button><button class="btn sub" id="mp-act">接続</button></div></div>
@@ -326,14 +326,14 @@ const $=id=>document.getElementById(id);
 let rng=Math.random,mode='random',diff='normal';const DIFFS={easy:{n:'やさしい',s:.85,v:.8,b:.8,m:.8},normal:{n:'ふつう',s:1,v:1,b:1,m:1},hard:{n:'むずかしい',s:1.15,v:1.2,b:1.2,m:1.25}};let DF=DIFFS.normal;const MODES={random:'ランダムモード',fixed:'固定迷路モード',daily:'デイリー',inf:'無限モード'};let depth=1;const INFM=()=>mode==='inf'&&!MP.inGame;const szR=()=>INFM()?1+.5*(N/17-1):1;const parSec=()=>Math.round((120+(N-17)*12+Math.min(2,(depth-1)/5|0)*20)/10)*10;const parTxt=()=>{const q=parSec();return((q/60)|0)+':'+String(q%60).padStart(2,'0')};
 function seeded(s){return()=>{s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 function shuf(a){for(let i=a.length-1;i>0;i--){const j=rng()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a}
-function gen(){N=MP.inGame?mpSize(PN):INFM()?Math.min(27,17+2*((depth-1)/3|0)):17;visited=new Uint8Array(N*N);floorT.repeat.set(N*CS/8,N*CS/8);ceilT.repeat.set(N*CS/8,N*CS/8);rng=MP.inGame?seeded(MP.seed):mode==='fixed'?seeded(20261118+stg*97):mode==='daily'?seeded(dailySeed()+stg*97):Math.random;g=[];for(let y=0;y<N;y++){g[y]=[];for(let x=0;x<N;x++)g[y][x]=1}
- if(MP.inGame){const L=[[1,1]];g[1][1]=0;while(L.length){const k=rng()<.55?(rng()*L.length|0):L.length-1,[x,y]=L[k],o=shuf([[2,0],[-2,0],[0,2],[0,-2]]).filter(([dx,dy])=>{const nx=x+dx,ny=y+dy;return nx>0&&ny>0&&nx<N-1&&ny<N-1&&g[ny][nx]});if(!o.length){L.splice(k,1);continue}const[dx,dy]=o[0];g[y+dy/2][x+dx/2]=0;g[y+dy][x+dx]=0;L.push([x+dx,y+dy])}
-  for(let i=0,t=0,ng=Math.round(((N-1)/2)**2*.2);i<ng&&t<ng*30;t++){const x=1+(rng()*(N-2)|0),y=1+(rng()*(N-2)|0);if(g[y][x]&&((x%2==0)!=(y%2==0))){g[y][x]=0;i++}}}
+function gen(){usedDE=new Set();N=MP.inGame?mpSize(PN):INFM()?Math.min(27,17+2*((depth-1)/3|0)):17;visited=new Uint8Array(N*N);floorT.repeat.set(N*CS/8,N*CS/8);ceilT.repeat.set(N*CS/8,N*CS/8);rng=MP.inGame?seeded(MP.seed):mode==='fixed'?seeded(20261118+stg*97):mode==='daily'?seeded(dailySeed()+stg*97):Math.random;g=[];for(let y=0;y<N;y++){g[y]=[];for(let x=0;x<N;x++)g[y][x]=1}
+ if(MP.inGame){const L=[[1,1]];g[1][1]=0;while(L.length){const k=rng()<.4?(rng()*L.length|0):L.length-1,[x,y]=L[k],o=shuf([[2,0],[-2,0],[0,2],[0,-2]]).filter(([dx,dy])=>{const nx=x+dx,ny=y+dy;return nx>0&&ny>0&&nx<N-1&&ny<N-1&&g[ny][nx]});if(!o.length){L.splice(k,1);continue}const[dx,dy]=o[0];g[y+dy/2][x+dx/2]=0;g[y+dy][x+dx]=0;L.push([x+dx,y+dy])}
+  for(let i=0,t=0,ng=Math.round(((N-1)/2)**2*.13);i<ng&&t<ng*30;t++){const x=1+(rng()*(N-2)|0),y=1+(rng()*(N-2)|0);if(g[y][x]&&((x%2==0)!=(y%2==0))){g[y][x]=0;i++}}}
  else{(function carve(x,y){g[y][x]=0;shuf([[2,0],[-2,0],[0,2],[0,-2]]).forEach(([dx,dy])=>{const nx=x+dx,ny=y+dy;if(nx>0&&ny>0&&nx<N-1&&ny<N-1&&g[ny][nx]){g[y+dy/2][x+dx/2]=0;carve(nx,ny)}})})(1,1);
  for(let i=0,ng=Math.round(26*N*N/289);i<ng;i++){const x=1+(rng()*(N-2)|0),y=1+(rng()*(N-2)|0);if(g[y][x]&&((x%2==0)!=(y%2==0)))g[y][x]=0}}}
 const solid=(x,z)=>{const cx=Math.round(x/CS),cy=Math.round(z/CS);return cx<0||cy<0||cx>=N||cy>=N||g[cy][cx]===1};
 const cellOf=v=>Math.round(v/CS);
-const deadEnd=()=>{const c=[];for(let y=1;y<N-1;y++)for(let x=1;x<N-1;x++)if(!g[y][x]&&!(x<5&&y<5)&&[[1,0],[-1,0],[0,1],[0,-1]].filter(([a,b])=>!g[y+b][x+a]).length===1)c.push([x,y]);return c.length?c[rng()*c.length|0]:free()};
+var usedDE=new Set();const deadEnd=()=>{const c=[];for(let y=1;y<N-1;y++)for(let x=1;x<N-1;x++)if(!g[y][x]&&!(x<5&&y<5)&&[[1,0],[-1,0],[0,1],[0,-1]].filter(([a,b])=>!g[y+b][x+a]).length===1&&!usedDE.has(x+','+y))c.push([x,y]);if(!c.length)return free();const p=c[rng()*c.length|0];usedDE.add(p[0]+','+p[1]);return p};
 const free=()=>{let x,y;do{x=1+(rng()*(N-2)|0);y=1+(rng()*(N-2)|0)}while(g[y][x]||(x<5&&y<5));return[x,y]};
 
 // renderer / scene
@@ -398,6 +398,8 @@ function build(){
   const o=new THREE.Mesh(new THREE.BoxGeometry(.36,.02,.28),new THREE.MeshStandardMaterial({map:new THREE.CanvasTexture(c),emissive:0x302010,roughness:.9}));o.position.set(x*CS+(rng()-.5)*2,1.0,y*CS+(rng()-.5)*2);world.add(o);maps.push(o)}
  orbs=[];for(let oi=0;oi<PN;oi++){const[x,y]=free();const o=new THREE.Mesh(new THREE.SphereGeometry(.16,16,12),new THREE.MeshStandardMaterial({color:0xa0d8ff,emissive:0x2060c0,emissiveIntensity:1,transparent:true,opacity:.85,roughness:.1}));o.position.set(x*CS+(rng()-.5)*2,1.0,y*CS+(rng()-.5)*2);world.add(o);orbs.push(o)}
  crks=[];for(let i=0;i<3*PN;i++){const[x,y]=free();const o=new THREE.Mesh(new THREE.CylinderGeometry(.04,.04,.2,8),new THREE.MeshStandardMaterial({color:0xd04030,emissive:0x601008,emissiveIntensity:.8}));o.position.set(x*CS+(rng()-.5)*2,.12,y*CS+(rng()-.5)*2);o.rotation.z=Math.PI/2;world.add(o);crks.push(o)}
+ notes=[];if(!MP.inGame&&stg>=1&&stg<=5&&!noteHas(stg)){const[x,y]=deadEnd();const o=new THREE.Mesh(new THREE.BoxGeometry(.3,.4,.02),new THREE.MeshStandardMaterial({color:0xf2e6b8,emissive:0xb89a40,emissiveIntensity:1}));o.position.set(x*CS,1,y*CS);world.add(o);notes.push(o)}
+ vaults=[];if(INFM()&&depth>=6){const[x,y]=deadEnd();const o=new THREE.Mesh(new THREE.BoxGeometry(.5,.8,.06),new THREE.MeshStandardMaterial({color:0x8a3cff,emissive:0x7020ff,emissiveIntensity:1.6}));o.position.set(x*CS,1.2,y*CS);const li=new THREE.Sprite(new THREE.SpriteMaterial({map:HALO,color:0x9040ff,blending:THREE.AdditiveBlending,depthWrite:false,transparent:true,opacity:.9}));li.scale.set(2.2,2.2,1);o.add(li);world.add(o);vaults.push(o);setTimeout(()=>{if(state==='play')say('どこかに「封印の間」がある…危険だが、価値のある宝が眠る',4500)},3000)}
  cards=[];for(let ci=0;ci<PN;ci++)['ghost','swift','decoy'].forEach(t=>{const[x,y]=free();const o=new THREE.Mesh(new THREE.BoxGeometry(.28,.45,.02),new THREE.MeshStandardMaterial({color:0xcfe6ff,emissive:0x4a8aff,emissiveIntensity:1.2}));o.position.set(x*CS+(rng()-.5)*2,1.1,y*CS+(rng()-.5)*2);o.userData.t=t;world.add(o);cards.push(o)});
  pebs=[];for(let i=0;i<7*PN;i++){const[x,y]=free();const o=new THREE.Mesh(new THREE.DodecahedronGeometry(.13),new THREE.MeshStandardMaterial({color:0x8a8a84,roughness:.9,emissive:0x1a1a18}));o.position.set(x*CS+(rng()-.5)*2,.13,y*CS+(rng()-.5)*2);world.add(o);pebs.push(o)}
  lockers=[];const lm=new THREE.MeshStandardMaterial({color:0x2c3a34,roughness:.6,metalness:.4});
@@ -448,7 +450,7 @@ function say(t,ms){const m=$('msg');m.textContent=t;m.style.opacity=1;clearTimeo
 function bfs(a,b){const q=[a],pr={};pr[a]=null;while(q.length){const c=q.shift();if(c[0]===b[0]&&c[1]===b[1])break;[[1,0],[-1,0],[0,1],[0,-1]].forEach(([dx,dy])=>{const nx=c[0]+dx,ny=c[1]+dy;if(nx<0||ny<0||nx>=N||ny>=N||g[ny][nx])return;const key=nx+','+ny;if(key in pr)return;pr[key]=c;q.push([nx,ny])})}
  let c=b,p=pr[b[0]+','+b[1]];if(p===undefined)return a;while(p&&!(p[0]===a[0]&&p[1]===a[1])){c=p;p=pr[p[0]+','+p[1]]}return c}
 function los(ax,az,bx,bz){const d=Math.hypot(bx-ax,bz-az),n=Math.ceil(d/.5);for(let i=1;i<n;i++){const t=i/n;if(solid(ax+(bx-ax)*t,az+(bz-az)*t))return false}return true}
-function start(keep){NEED=[4,4,5,5,6][stg-1]*(MP.inGame?PN:1)+(INFM()?Math.min(2,(depth-1)/5|0):0);if(INFM()){const b0=DIFFS[diff],k0=Math.min(depth-1,12);DF={n:b0.n,s:b0.s*(1+.04*k0),v:b0.v*(1+.03*k0),b:b0.b,m:b0.m}}const sb=P.bat,ss=stones,sc0=card,sm=mir;gen();build();applyTheme();decor();decor2();decor3();decor4();decor5();initWater();showStage();got=0;escN=0;riskN=0;hidden=false;aware=0;stones=keep?ss:3;mir=keep?sm:0;crk=keep?crk:0;orb=keep?orb:0;crkT=0;crkL.intensity=0;freezeT=0;eAct=null;bfsKey='';mapHave=false;mapOpen=false;mapDirty=true;visited.fill(0);exitSeen=false;$('mapc').classList.add('hide');eSpeed=2;noticed=0;used=0;tStart=performance.now();card=keep?sc0:null;ghost=0;swift=0;showCard();$('stn').textContent=stones;$('hideov').classList.add('hide');$('rel').textContent=0;$('need').textContent=NEED;$('mode-tag').innerHTML=(MP.inGame?'<span style="color:'+mpCol(MP.id)+'">●</span> マルチプレイ'+PN+'人（あなたは'+AVN[mpCI(MP.id)%4]+'）':MODES[mode])+' / '+DF.n+' / 第'+(INFM()?depth:stg)+'回廊'+(INFM()?' / 目安 '+parTxt():'');{const sp0=mpSpawn();P.x=sp0[0]*CS;P.z=sp0[1]*CS}P.yaw=-Math.PI/2*0;P.pitch=0;P.bat=keep?Math.min(100,sb+50):100;P.sta=100;P.on=true;
+function start(keep){NEED=[4,4,5,5,6][stg-1]*(MP.inGame?PN:1)+(INFM()?Math.min(2,(depth-1)/5|0):0);if(INFM()){const b0=DIFFS[diff],k0=Math.min(depth-1,12);DF={n:b0.n,s:b0.s*(1+.04*k0),v:b0.v*(1+.03*k0),b:b0.b,m:b0.m}}const sb=P.bat,ss=stones,sc0=card,sm=mir;gen();build();applyTheme();decor();decor2();decor3();decor4();decor5();initWater();showStage();got=0;escN=0;riskN=0;alarmT=0;vaultB=0;hidden=false;aware=0;stones=keep?ss:3;mir=keep?sm:0;crk=keep?crk:0;orb=keep?orb:0;crkT=0;crkL.intensity=0;freezeT=0;eAct=null;bfsKey='';mapHave=false;mapOpen=false;mapDirty=true;visited.fill(0);exitSeen=false;$('mapc').classList.add('hide');eSpeed=2;noticed=0;used=0;tStart=performance.now();card=keep?sc0:null;ghost=0;swift=0;showCard();$('stn').textContent=stones;$('hideov').classList.add('hide');$('rel').textContent=0;$('need').textContent=NEED;$('mode-tag').innerHTML=(MP.inGame?'<span style="color:'+mpCol(MP.id)+'">●</span> マルチプレイ'+PN+'人（あなたは'+AVN[mpCI(MP.id)%4]+'）':MODES[mode])+' / '+DF.n+' / 第'+(INFM()?depth:stg)+'回廊'+(INFM()?' / 目安 '+parTxt():'');{const sp0=mpSpawn();P.x=sp0[0]*CS;P.z=sp0[1]*CS}P.yaw=-Math.PI/2*0;P.pitch=0;P.bat=keep?Math.min(100,sb+50):100;P.sta=100;P.on=true;
  let ex,ey;do{[ex,ey]=free()}while(Math.hypot(ex-1,ey-1)<10);E={x:ex*CS,z:ey*CS};eMode='wander';eTarget=[ex,ey];lost=0;
  const dirs=[[0,-1],[1,0],[0,1],[-1,0]];if(MP.inGame){ent.visible=false;rng=Math.random;mpSpawnAvatars()}state='play';say('第'+(INFM()?depth:stg)+'回廊 — '+IN()+'を'+NEED+IC()+'、集めろ（赤い'+IN()+'は罠だが報酬がある）',5000);}
 function die(){if(state!=='play'||MP.inGame)return;if(card==='decoy'){card=null;showCard();let c;do{c=free()}while(Math.hypot(c[0]*CS-P.x,c[1]*CS-P.z)<30&&Math.random()<.9);E.x=c[0]*CS;E.z=c[1]*CS;eMode='wander';eTarget=null;eAct=null;aware=0;hideT=0;burst(.8,.7,3000,0,.5);tone(300,0,1,.3,'square',60,.5);say('身代わりの札が砕けた…',3000);return}state='dead';$('flash').style.opacity=1;hidden=false;$('hideov').classList.add('hide');hush();burst(1.4,.9,7000,0,.5);tone(1100,0,1.1,.3,'sawtooth',140,.5);tone(1170,0,1.1,.25,'sawtooth',150,.5);tone(90,0,1.6,.6,'square',35,.4);if(!INFM())recDeath(false);
@@ -468,14 +470,14 @@ function arrive(){const lk=eTarget&&eTarget.lk,inv=eTarget&&eTarget.inv,r=Math.r
  if(inv||r<.45){eAct={t:inv?4.5:3.5};return}
  if(r<.75){let best=null,bd=1e9;lockers.forEach(l=>{const d=Math.hypot(l.cx-E.x,l.cz-E.z);if(d>4&&d<48&&d<bd){bd=d;best=l}});if(best){eTarget=[cellOf(best.cx),cellOf(best.cz)];eTarget.lk=best}}}
 function near(){for(let i=0;i<30;i++){const c=free();if(Math.hypot(c[0]-cellOf(P.x),c[1]-cellOf(P.z))<7)return c}return free()}
-function risk(){riskN++;stones=Math.min(9,stones+2);P.bat=Math.min(100,P.bat+25);$('stn').textContent=stones;tone(95,0,2,.5,'sawtooth',40,.7);burst(1,.5,900,0,.6);aware=1;mpEv({t:'al'});say('警報が鳴り響く！ 小石+2 電池+25',3500)}
+function risk(){riskN++;stones=Math.min(9,stones+3);P.bat=Math.min(100,P.bat+40);$('stn').textContent=stones;tone(95,0,2,.5,'sawtooth',40,.7);burst(1,.5,900,0,.6);aware=1;if(!MP.inGame)alarmT=10;mpEv({t:'al'});return '警報！ 小石+3 電池+40'+'／しばらく「それ」が速い'}
 const STAGE={2:'足音が速くなった…',3:'灯りが不安定になる…',4:'「それ」がこちらを探し始めた'};
 function stage(){const s=got<NEED?STAGE[got]:null;if(s)setTimeout(()=>{if(state==='play')say(s,3500)},3600)}
 const rankOf=s=>s>=700?'S':s>=500?'A':s>=300?'B':'C';
 function infGet(){let r=null,h=0;try{r=JSON.parse(localStorage.getItem('hc2-inf')||'null');h=+localStorage.getItem('hc2-best-inf')||0}catch(e){}const n=v=>{v=+v;return isFinite(v)&&v>0?Math.floor(v):0};r=r&&typeof r==='object'&&!Array.isArray(r)?r:{};return{b:Math.max(n(r.b),n(h)),s:n(r.s),n:n(r.n),c:n(r.c)}}
 function infSave(r){try{localStorage.setItem('hc2-inf',JSON.stringify(r));localStorage.setItem('hc2-best-inf',r.b)}catch(e){}}
 function infDead(){const c=depth-1,r=infGet();return '無限モード・'+DF.n+'<br>踏破した回廊 <b>'+c+'</b>（最高 '+Math.max(r.b,c)+'）<br>累計スコア '+total+'（最高 '+Math.max(r.s,total)+'）<br>「それ」は今もそこにいる。'}
-function infWin(sc0,st){const par=parSec(),tp=Math.max(0,600+Math.max(-600,Math.min(150,(par-st)*1.5))),bonus=Math.round(depth*100*DF.m),sc=Math.max(0,Math.round((tp-noticed*80-used*20)*DF.m))+bonus;total+=sc;totN+=noticed;totU+=used;const r=infGet(),nw=depth>r.b;if(nw)r.b=depth;if(total>r.s)r.s=total;r.c++;infSave(r);return '扉は開いた。さらに深い回廊が待っている。<br><br>無限モード・'+DF.n+'・第'+depth+'回廊（'+THEMES[stg-1].n+'・迷路 '+N+'×'+N+'）<br>時間 '+((st/60)|0)+'分'+(st%60)+'秒（目安 '+parTxt()+(st<=par?'・達成':'・超過')+'） ／ 気づかれた '+noticed+'回 ／ 小石 '+used+'個<br>この回廊のスコア '+sc+'（深度ボーナス +'+bonus+'）　累計 '+total+(nw?'<br>最高到達を更新':'<br>最高到達 第'+r.b+'回廊')}
+function infWin(sc0,st){const par=parSec(),tp=Math.max(0,600+Math.max(-600,Math.min(150,(par-st)*1.5))),bonus=Math.round(depth*100*DF.m),sc=Math.max(0,Math.round((tp-noticed*80-used*20)*DF.m))+bonus+vaultB;total+=sc;totN+=noticed;totU+=used;const r=infGet(),nw=depth>r.b;if(nw)r.b=depth;if(total>r.s)r.s=total;r.c++;infSave(r);return '扉は開いた。さらに深い回廊が待っている。<br><br>無限モード・'+DF.n+'・第'+depth+'回廊（'+THEMES[stg-1].n+'・迷路 '+N+'×'+N+'）<br>時間 '+((st/60)|0)+'分'+(st%60)+'秒（目安 '+parTxt()+(st<=par?'・達成':'・超過')+'） ／ 気づかれた '+noticed+'回 ／ 小石 '+used+'個<br>この回廊のスコア '+sc+'（深度ボーナス +'+bonus+'）　累計 '+total+(nw?'<br>最高到達を更新':'<br>最高到達 第'+r.b+'回廊')}
 function infHtml(){const r=infGet();return '<p>無限モード　最高到達 '+(r.b?'第'+r.b+'回廊':'―')+'　／　最高累計スコア '+(r.s||'―')+'　／　挑戦 '+r.n+'回　／　踏破 '+r.c+'回廊</p>'}
 function result(fin){const sec=Math.round((performance.now()-(fin?runStart:tStart))/1000),st=Math.round((performance.now()-tStart)/1000),sc=Math.max(0,Math.round((1000-st*1.5-noticed*100-used*30)*DF.m)),key=mode==='daily'?'hc2-day-'+dayStr():'hc2-best-'+mode;let best=0,nw=false;if(INFM())return infWin(sc,st);recWin(sc,st);total+=sc;totN+=noticed;totU+=used;const fs=fin?Math.max(0,Math.round(total/STAGES)-retries*40):sc;
  if(!fin){const rk=rankOf(sc),t=[];if(noticed===0)t.push('ghost');if(used===0)t.push('ascetic');if(st<=120)t.push('swift');if(rk==='S'&&noticed===0&&used===0)t.push('perfect');return '扉は開いた。<br><br>'+MODES[mode]+'・'+DF.n+'・第'+stg+'回廊<br>時間 '+((st/60)|0)+'分'+(st%60)+'秒 ／ 気づかれた '+noticed+'回 ／ 小石 '+used+'個<br>この回廊のスコア '+sc+'（累計 '+total+'）　ランク <b>'+rk+'</b>'+(t.length?'<br><br>称号 '+earnTitles(t):'')}
@@ -488,18 +490,27 @@ function dayStreak(){let n=0;for(let i=0;i<400;i++){const d=new Date();d.setDate
 const TITLES={ghost:['気づかれぬ者','一度も「それ」に気づかれずに脱出'],ascetic:['無欲の者','小石を1つも使わずに脱出'],swift:['疾き者','1つの回廊を2分以内に脱出'],perfect:['虚ろを歩む者','Sランク・気づかれず・小石なし・やり直しなしで踏破'],master:['回廊の主','全5回廊をAランク以上・やり直しなしで踏破'],survivor:['生還者','全5回廊を踏破'],daily:['日課の者','デイリーを3日連続でクリア']};
 function getTitles(){try{return JSON.parse(localStorage.getItem('hc2-titles')||'[]')}catch(e){return[]}}
 function earnTitles(ids){let have=getTitles();const nw=ids.filter(i=>!have.includes(i));if(nw.length){have=have.concat(nw);try{localStorage.setItem('hc2-titles',JSON.stringify(have))}catch(e){}}showTitles();return ids.map(i=>'「'+TITLES[i][0]+'」'+(nw.includes(i)?'<b>（新）</b>':'')).join(' ')}
-const BADGES={first:['初めての脱出','いずれかの回廊を脱出'],chase3:['逃げ切る者','1つの回廊で「それ」に追われて3回逃げ切る'],locker:['息を殺す者','ロッカーに隠れて追跡をやり過ごす'],redall:['罠を恐れぬ者','赤い護符を2つとも取って脱出'],hard:['恐れ知らず','「むずかしい」で脱出'],daily:['今日の挑戦者','今日の挑戦を脱出'],deep5:['深淵への一歩','無限モードで第5回廊を脱出'],deep10:['深淵の住人','無限モードで第10回廊を脱出'],mpwin:['仲間と共に','マルチプレイで脱出']};
+const BADGES={lore:['真相を知る者','5つの記録をすべて集める'],first:['初めての脱出','いずれかの回廊を脱出'],chase3:['逃げ切る者','1つの回廊で「それ」に追われて3回逃げ切る'],locker:['息を殺す者','ロッカーに隠れて追跡をやり過ごす'],redall:['罠を恐れぬ者','赤い護符を2つとも取り、小石を一度も投げずに脱出'],hard:['恐れ知らず','「むずかしい」で脱出'],daily:['今日の挑戦者','今日の挑戦を脱出'],deep5:['深淵への一歩','無限モードで第5回廊を脱出'],deep10:['深淵の住人','無限モードで第10回廊を脱出'],mpwin:['仲間と共に','マルチプレイで脱出']};
 let bgNew=[],escN=0,riskN=0;
 function getBadges(){try{const a=JSON.parse(localStorage.getItem('hc2-badges')||'[]');return Array.isArray(a)?a:[]}catch(e){return[]}}
 function badge(id,quiet){if(!BADGES[id])return false;const h=getBadges();if(h.includes(id))return false;h.push(id);try{localStorage.setItem('hc2-badges',JSON.stringify(h))}catch(e){}if(quiet)bgNew.push(id);else{say('実績解除「'+BADGES[id][0]+'」',3500);chime()}return true}
 function bgFlush(){const a=bgNew.map(i=>BADGES[i][0]);bgNew=[];return a.length?'<br><br>実績解除 '+a.join('・'):''}
 function escOk(h){if(MP.inGame)return;escN++;if(h)badge('locker');if(escN>=3)badge('chase3')}
-function winBadges(){if(MP.inGame)return '';badge('first',1);if(INFM()){if(depth>=5)badge('deep5',1);if(depth>=10)badge('deep10',1)}if(riskN>=2)badge('redall',1);if(diff==='hard'&&mode!=='daily')badge('hard',1);if(mode==='daily')badge('daily',1);return bgFlush()}
+function winBadges(){if(MP.inGame)return '';badge('first',1);if(INFM()){if(depth>=5)badge('deep5',1);if(depth>=10)badge('deep10',1)}if(riskN>=2&&used===0)badge('redall',1);if(diff==='hard'&&mode!=='daily')badge('hard',1);if(mode==='daily')badge('daily',1);return bgFlush()}
 function badgeHtml(){const h=getBadges();return '<p>実績 '+h.filter(i=>BADGES[i]).length+' / '+Object.keys(BADGES).length+'</p><div class="bdg">'+Object.keys(BADGES).map(i=>h.includes(i)?'<span class="on">✓ '+BADGES[i][0]+'</span>':'<span>― '+BADGES[i][0]+'：'+BADGES[i][1]+'</span>').join('')+'</div>'}
 function showTitles(){const el=$('ttl');if(!el)return;const h=getTitles();el.textContent='称号 '+h.length+' / '+Object.keys(TITLES).length+(h.length?'　'+h.map(i=>TITLES[i]?TITLES[i][0]:'').filter(Boolean).join('・'):'')+'　実績 '+getBadges().filter(i=>BADGES[i]).length+' / '+Object.keys(BADGES).length;el.title=Object.values(TITLES).map(t=>t[0]+'：'+t[1]).join('\n')}
 function showBest(){for(const k in MODES){let b=0;try{b=+localStorage.getItem(k==='daily'?'hc2-day-'+dayStr():'hc2-best-'+k)||0}catch(e){}const el=$('bst-'+k);if(!el)continue;if(k==='daily'){const sk=dayStreak();el.textContent=(b?'今日の記録 '+rankOf(b)+'（'+b+'）':'今日は未挑戦')+(sk?'／連続 '+sk+'日':'')}else if(k==='inf')el.textContent=b?'最高到達 第'+b+'回廊':'';else el.textContent=b?'自己ベスト '+rankOf(b)+'（'+b+'）':''}showTitles()}
 showBest();
 // ---- 記録画面 ----
+let notes=[],vaults=[],vaultB=0,noteEl=null,noteTm=0;const NKEY='hc2-notes';
+const NOTES={1:['日記の切れ端','放課後、地下の点検口が開いていた。先生は「降りるな」と言ったのに、友達が先に降りていった。名前を呼んでも、返事はなかった。'],2:['管理室の放送','…こちら管理室。第二区画で浸水。全員、機関室へ向かえ。繰り返す、「核」には近づくな。…放送はここで途切れている。'],3:['作業日誌','ボイラーは止めた。それでも蒸気が出る。誰も触っていない。扉の向こうで、誰かが内側から叩き続けている。'],4:['濡れた手帳','霧の中で友達の声に呼ばれた。返事をした者は戻らなかった。灯りを抱えて、音を立てずに歩け。'],5:['最後の記録','「それ」は最初から怪物ではなかった。最初に降りた子だ。帰り道を探すうち、出口を見失った。護符は、彼が集めた帰り道の目印。']};
+const TRUTH='真相：「それ」は、最初にここへ降りた子の成れの果て。出口を探し続けるうちに、迷う者を連れ戻そうと追うようになった。護符をすべて集めて脱出する者は、彼が帰れなかった道を代わりに辿っている。';
+function noteGet(){try{const a=JSON.parse(localStorage.getItem(NKEY)||'[]');return Array.isArray(a)?a.filter(i=>i>=1&&i<=5):[]}catch(e){return[]}}
+function noteHas(i){return noteGet().includes(i)}
+function noteShow(t,b,ms){if(!noteEl){noteEl=document.createElement('div');noteEl.setAttribute('role','status');noteEl.style.cssText='position:fixed;left:50%;bottom:12%;transform:translateX(-50%);max-width:min(560px,86vw);padding:14px 18px;background:rgba(10,8,4,.82);color:#e8dcc0;border:1px solid #8a7a50;border-radius:4px;font-size:15px;line-height:1.7;white-space:pre-wrap;pointer-events:none;z-index:30;transition:opacity .6s;opacity:0';document.body.appendChild(noteEl)}noteEl.textContent='';const h=document.createElement('b');h.textContent=t;noteEl.append(h,'\n',b);noteEl.style.opacity=1;clearTimeout(noteTm);noteTm=setTimeout(()=>{noteEl.style.opacity=0},ms)}
+function readNote(i){const n=NOTES[i];if(!n)return;const h=noteGet();if(!h.includes(i)){h.push(i);try{localStorage.setItem(NKEY,JSON.stringify(h))}catch(e){}}const all=h.length>=5;chime();noteShow(n[0]+'（'+h.length+'/5）',n[1]+(all?'\n\n'+TRUTH:''),all?14000:9000);if(all)badge('lore')}
+function noteHtml(){const h=noteGet();return '<p>ミニ物語　記録 '+h.length+' / 5'+(h.length?'<br>'+[1,2,3,4,5].filter(i=>h.includes(i)).map(i=>'第'+i+'回廊「'+NOTES[i][0]+'」'+NOTES[i][1]).join('<br>'):'')+(h.length>=5?'<br><b>'+TRUTH+'</b>':'')+'</p>'}
+function takeVault(){const b=Math.round((200+depth*25)*DF.m);vaultB+=b;P.bat=100;stones=Math.min(9,stones+3);$('stn').textContent=stones;let c,n=0,d;do{c=free();d=Math.hypot(c[0]*CS-P.x,c[1]*CS-P.z);n++}while(n<40&&(d<12||d>24));E.x=c[0]*CS;E.z=c[1]*CS;eMode='wander';eTarget=null;eAct=null;lost=0;aware=1;alarmT=20;chime();tone(70,0,2.5,.5,'sawtooth',35,.7);burst(1.2,.6,700,0,.6);say('封印の間の宝を奪った！ 電池全回復・小石+3・スコア+'+b+'　…「それ」が呼び寄せられた',5500)}
 const REC_KEY='hc2-rec';
 function recGet(){let r=null;try{r=JSON.parse(localStorage.getItem(REC_KEY)||'null')}catch(e){}if(!r||typeof r!=='object'||Array.isArray(r))r={};const n=v=>{v=+v;return isFinite(v)&&v>0?Math.floor(v):0};r.s=(r.s&&typeof r.s==='object')?r.s:{};for(let i=1;i<=5;i++){const q=(r.s[i]&&typeof r.s[i]==='object')?r.s[i]:{};r.s[i]={w:n(q.w),d:n(q.d),b:n(q.b),t:n(q.t)}}r.f=n(r.f);r.n=n(r.n);const m=(r.mp&&typeof r.mp==='object')?r.mp:{};r.mp={m:n(m.m),e:n(m.e),d:n(m.d)};return r}
 function recSave(r){try{localStorage.setItem(REC_KEY,JSON.stringify(r))}catch(e){}}
@@ -514,11 +525,11 @@ function showRec(){const r=recGet();let w=0,d=0;
  +'<p>全5回廊の踏破 '+r.f+'回　／　気づかれた通算 '+r.n+'回</p>'
  +'<p>自己ベスト（全5回廊）　'+bests+'</p>'
  +'<p>デイリー連続 '+sk+'日　／　称号 '+tl+' / '+Object.keys(TITLES).length+'</p>'
- +'<p>マルチプレイ　参加 '+r.mp.m+'試合　／　脱出 '+r.mp.e+'回　／　捕まった '+r.mp.d+'回</p>'+infHtml()+badgeHtml()}
+ +'<p>マルチプレイ　参加 '+r.mp.m+'試合　／　脱出 '+r.mp.e+'回　／　捕まった '+r.mp.d+'回</p>'+infHtml()+noteHtml()+badgeHtml()}
 function openRec(){showRec();$('start').inert=true;$('recscr').classList.remove('hide');$('reccls').focus()}
 function closeRec(){$('recscr').classList.add('hide');$('start').inert=false;$('recb').focus()}
 $('recb').addEventListener('click',openRec);$('reccls').addEventListener('click',closeRec);
-$('recclr').addEventListener('click',()=>{if(confirm('回廊ごとの記録と通算回数を消します。自己ベストと称号は残ります。よろしいですか？')){try{localStorage.removeItem(REC_KEY)}catch(e){}showRec()}});
+$('recclr').addEventListener('click',()=>{if(confirm('回廊ごとの記録と通算回数、拾ったミニ物語の記録を消します。自己ベストと称号は残ります。よろしいですか？')){try{localStorage.removeItem(REC_KEY);localStorage.removeItem(NKEY)}catch(e){}showRec()}});
 addEventListener('keydown',e=>{if(e.code==='Escape'&&!$('recscr').classList.contains('hide'))closeRec()});
 const CARDS={ghost:'隠形の札',swift:'疾風の札',decoy:'身代わりの札'};
 function showCard(){$('crd').textContent=card?CARDS[card]:'なし';$('mir').textContent=mir;$('ck').textContent=crk;$('ob').textContent=orb;$('mp').textContent=mapHave?1:0}
@@ -586,14 +597,16 @@ function useMirror(){if(state!=='play'||mir<1||!warps.length)return;mir=0;showCa
  eMode='wander';eTarget=null;eAct=null;aware=0;lost=0;hideT=0;mpEv({t:'mir'});
  const f=$('flash');f.style.background='#cfe6ff';f.style.opacity=.9;setTimeout(()=>{f.style.opacity=0;setTimeout(()=>{f.style.background=''},400)},120);
  chime();tone(1800,0,.5,.1,'sine',2600,.9);burst(.4,.15,6000,0,.8);say('手鏡が砕けた…どこかへ飛ばされた',3200)}
-const DEF={vol:.9,sens:1,fov:72,bright:1,bob:true,grain:true,blur:true,phantom:true,touchUI:false,res:(matchMedia('(any-pointer:coarse)').matches?1:Math.min(window.devicePixelRatio||1,1.5))},OPT=Object.assign({},DEF);
+const TORCH={white:0xffffff,cool:0xbfd8ff,green:0xa8ffc0,red:0xff9a80};
+const DEF={vol:.9,sens:1,fov:72,bright:1,bob:true,grain:true,blur:true,phantom:true,touchUI:false,torch:'def',pcol:'auto',res:(matchMedia('(any-pointer:coarse)').matches?1:Math.min(window.devicePixelRatio||1,1.5))},OPT=Object.assign({},DEF);
 try{Object.assign(OPT,JSON.parse(localStorage.getItem('hc-opt')||'{}'))}catch(e){}
-const OPTS=[{k:'vol',n:'全体音量',min:0,max:1,st:.05,f:v=>Math.round(v*100)+'%'},{k:'sens',n:'マウス感度',min:.4,max:2.5,st:.1,f:v=>v.toFixed(1)+'倍'},{k:'fov',n:'視野角',min:60,max:100,st:1,f:v=>v+'°'},{k:'res',n:'描画の細かさ',min:.5,max:2,st:.25,f:v=>v.toFixed(2)+'倍'},{k:'bright',n:'明るさ',min:.6,max:2,st:.1,f:v=>v.toFixed(1)+'倍'},{k:'bob',n:'歩行時の揺れ',t:'chk'},{k:'grain',n:'フィルムノイズ',t:'chk'},{k:'blur',n:'敵が近いときの視界のにじみ',t:'chk'},{k:'phantom',n:'マルチで自分だけに起こる怪異（影・物音）',t:'chk'},{k:'touchUI',n:'タッチ操作ボタンを常に表示',t:'chk'}];
+const OPTS=[{k:'vol',n:'全体音量',min:0,max:1,st:.05,f:v=>Math.round(v*100)+'%'},{k:'sens',n:'マウス感度',min:.4,max:2.5,st:.1,f:v=>v.toFixed(1)+'倍'},{k:'fov',n:'視野角',min:60,max:100,st:1,f:v=>v+'°'},{k:'res',n:'描画の細かさ',min:.5,max:2,st:.25,f:v=>v.toFixed(2)+'倍'},{k:'bright',n:'明るさ',min:.6,max:2,st:.1,f:v=>v.toFixed(1)+'倍'},{k:'bob',n:'歩行時の揺れ',t:'chk'},{k:'grain',n:'フィルムノイズ',t:'chk'},{k:'blur',n:'敵が近いときの視界のにじみ',t:'chk'},{k:'phantom',n:'マルチで自分だけに起こる怪異（影・物音）',t:'chk'},{k:'torch',n:'懐中電立の色',t:'sel',o:[['def','標準（回廊ごと）'],['white','白'],['cool','青白'],['green','緑'],['red','赤み']]},{k:'pcol',n:'マルチでの自分の色（空いていれば）',t:'sel',o:[['auto','おまかせ'],['0','青'],['1','緑'],['2','黄'],['3','桃']]},{k:'touchUI',n:'タッチ操作ボタンを常に表示',t:'chk'}];
 function saveOpt(){try{localStorage.setItem('hc-opt',JSON.stringify(OPT))}catch(e){}}
-function applyOpt(){OPT.vol=Math.min(1,Math.max(0,+OPT.vol));OPT.sens=Math.min(2.5,Math.max(.4,+OPT.sens||1));OPT.fov=Math.min(100,Math.max(60,+OPT.fov||72));OPT.bright=Math.min(2,Math.max(.6,+OPT.bright||1));
+function applyOpt(){if(OPT.torch!=='def'&&!TORCH[OPT.torch])OPT.torch='def';if(!['auto','0','1','2','3'].includes(String(OPT.pcol)))OPT.pcol='auto';OPT.vol=Math.min(1,Math.max(0,+OPT.vol));OPT.sens=Math.min(2.5,Math.max(.4,+OPT.sens||1));OPT.fov=Math.min(100,Math.max(60,+OPT.fov||72));OPT.bright=Math.min(2,Math.max(.6,+OPT.bright||1));
  if(AC&&AC.out)AC.out.gain.setTargetAtTime(OPT.vol,AC.currentTime,.05);OPT.res=Math.min(2,Math.max(.5,+OPT.res||1));pr=OPT.res;renderer.setPixelRatio(pr);cam.fov=OPT.fov;resize();$('grain').style.display=OPT.grain?'':'none';try{showTouch()}catch(e){}}
 function renderRows(){const box=$('rows');box.innerHTML='';OPTS.forEach(o=>{const r=document.createElement('div');r.className='row';const id='o-'+o.k,lb=document.createElement('label');lb.htmlFor=id;lb.textContent=o.n;const inp=document.createElement('input');inp.id=id;const val=document.createElement('span');val.className='val';
   if(o.t==='chk'){inp.type='checkbox';inp.checked=!!OPT[o.k];val.textContent=OPT[o.k]?'オン':'オフ';inp.onchange=()=>{OPT[o.k]=inp.checked;val.textContent=inp.checked?'オン':'オフ';saveOpt();applyOpt()}}
+  else if(o.t==='sel'){const sl=document.createElement('select');sl.id=id;sl.style.cssText='background:#111;color:#e8e8e8;border:1px solid #555;padding:.3em;font:inherit';o.o.forEach(([v,t])=>{const op=document.createElement('option');op.value=v;op.textContent=t;sl.append(op)});sl.value=String(OPT[o.k]);sl.onchange=()=>{OPT[o.k]=sl.value;saveOpt();applyOpt()};r.append(lb,sl);box.append(r);return}
   else{inp.type='range';inp.min=o.min;inp.max=o.max;inp.step=o.st;inp.value=OPT[o.k];val.textContent=o.f(+OPT[o.k]);inp.oninput=()=>{OPT[o.k]=+inp.value;val.textContent=o.f(+inp.value);saveOpt();applyOpt();if(o.k==='vol'){audioInit();if(AC.state==='suspended')AC.resume();tone(220,0,.3,.2,'sine',180,.3)}}}
   r.append(lb,inp,val);box.append(r)})}
 function openSet(){renderRows();$('start').inert=true;$('set').classList.remove('hide');$('set').querySelector('input').focus()}
@@ -851,12 +864,12 @@ let mpF=0,NEARSPD=0;
 let PN=1;
 const mpEnc=o=>btoa(unescape(encodeURIComponent(JSON.stringify(o))));
 const mpDec=t=>JSON.parse(decodeURIComponent(escape(atob(String(t).replace(/\s+/g,'')))));
-const mpClip=s=>Array.from(String(s==null?'':s).trim()).slice(0,8).join('');const mpName=()=>mpClip($('mp-name').value)||'プレイヤー';
-const mpPc=()=>new RTCPeerConnection({iceServers:[]});
+const mpClip=s=>Array.from(String(s==null?'':s).trim()).slice(0,8).join('');const mpName=()=>mpClip($('mp-name').value)||'プレイヤー';const mpPref=()=>{const v=String(OPT.pcol);return v==='auto'?-1:+v};
+const MP_ICE=[{urls:'stun:stun.l.google.com:19302'},{urls:['turn:eu-0.turn.peerjs.com:3478','turn:us-0.turn.peerjs.com:3478'],username:'peerjs',credential:'peerjsp'}];const mpPc=()=>new RTCPeerConnection({iceServers:MP_ICE});
 const mpSay=t=>{$('mp-st').textContent=t};
 const mpView=v=>{$('mp-v-menu').classList.toggle('hide',v!=='menu');$('mp-v-room').classList.toggle('hide',v==='menu')};
-function mpIce(pc){return new Promise(res=>{if(pc.iceGatheringState==='complete')return res();const f=()=>{if(pc.iceGatheringState==='complete'){pc.removeEventListener('icegatheringstatechange',f);res()}};pc.addEventListener('icegatheringstatechange',f);setTimeout(res,3000)})}
-const MP_PFX='utsuro-',PEER_OPTS={config:{iceServers:[]}},PEER_SRC='https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js';
+function mpIce(pc){return new Promise(res=>{if(pc.iceGatheringState==='complete')return res();const f=()=>{if(pc.iceGatheringState==='complete'){pc.removeEventListener('icegatheringstatechange',f);res()}};pc.addEventListener('icegatheringstatechange',f);setTimeout(res,5000)})}
+const MP_PFX='utsuro-',PEER_OPTS={config:{iceServers:MP_ICE}},PEER_SRC='https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js';
 function mpLoadPeer(){return new Promise((res,rej)=>{if(window.Peer)return res();const e=document.createElement('script');let t=setTimeout(()=>{e.remove();rej(new Error('timeout'))},10000);e.src=PEER_SRC;e.onload=()=>{clearTimeout(t);window.Peer?res():rej(new Error('nopeer'))};e.onerror=()=>{clearTimeout(t);e.remove();rej(new Error('load'))};document.head.appendChild(e)})}
 function mpWrap(conn){const dc={onmessage:null,onclose:null,send:s=>conn.send(s),get readyState(){return conn.open?'open':'closed'}};conn.on('data',d=>{if(dc.onmessage)dc.onmessage({data:typeof d==='string'?d:String(d)})});let gone=0;const fire=()=>{if(gone)return;gone=1;if(dc.onclose)dc.onclose()};conn.on('close',fire);conn.on('open',()=>{const rp=conn.peerConnection;if(rp)rp.addEventListener('iceconnectionstatechange',()=>{if(rp.iceConnectionState==='failed'||rp.iceConnectionState==='closed')fire()})});conn.on('error',()=>{try{conn.close()}catch(_){}});return{dc,pc:{close(){try{conn.close()}catch(_){}}}}}
 function mpCode(){const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',r=crypto.getRandomValues(new Uint32Array(5));let s='';r.forEach(x=>{s+=A[x%A.length]});return s}
@@ -875,16 +888,16 @@ async function mpJoinRoom(){const code=($('mp-rc').value||'').toUpperCase().repl
  if(MP.hostPc){try{MP.hostPc.close()}catch(_){}MP.hostPc=null}
  const peer=new Peer(MP_PFX+'g-'+mpCode()+mpCode(),PEER_OPTS);let done=false,to=0;
  const fail=t=>{if(done)return;done=true;clearTimeout(to);mpSay(t);try{peer.destroy()}catch(_){}MP.hostPc=null;MP.hostDc=null;$('mp-rj').disabled=false};
- to=setTimeout(()=>fail('部屋が見つかりません。コードを確認してください'),15000);
+ to=setTimeout(()=>fail('接続できませんでした。コードを確認するか、時間をおいて再度お試しください'),25000);
  peer.on('error',e=>fail(e.type==='peer-unavailable'?'その部屋コードは見つかりません':'接続に失敗しました（'+e.type+'）'));
  peer.on('open',()=>{const conn=peer.connect(MP_PFX+code,{reliable:true,serialization:'json'}),w=mpWrap(conn);MP.hostDc=w.dc;MP.hostPc={close(){try{conn.close()}catch(_){}try{peer.destroy()}catch(_){}}};
-  conn.on('open',()=>{if(done)return;done=true;clearTimeout(to);w.dc.onmessage=mpGuestMsg;w.dc.onclose=mpGuestLost;$('mp-rj').disabled=false;conn.send(JSON.stringify({k:'hi',n:mpName()}))})})}
+  conn.on('open',()=>{if(done)return;done=true;clearTimeout(to);w.dc.onmessage=mpGuestMsg;w.dc.onclose=mpGuestLost;$('mp-rj').disabled=false;conn.send(JSON.stringify({k:'hi',n:mpName(),c:mpPref()}))})})}
 function mpDraw(){const box=$('mp-list');box.innerHTML='';for(let i=0;i<4;i++){const p=MP.roster[i],r=document.createElement('div'),a=document.createElement('span'),b=document.createElement('span');r.className='mpr'+(p?'':' empty');a.textContent=(i+1)+'  ';if(p){const d=document.createElement('span'),cn=document.createElement('small');d.textContent='●';d.style.color=mpColI(p.c!=null?p.c:i);cn.textContent='　'+AVN[(p.c!=null?p.c:i)%4];cn.style.opacity='.6';a.append(d,' '+p.name+(p.id===0?'（ホスト）':'')+(p.id===MP.id?'（あなた）':''),cn)}else a.append('―― 待機中 ――');b.textContent=p&&p.id!==0&&p.ping!=null?p.ping+'ms':'';r.append(a,b);box.appendChild(r)}$('mp-gj').classList.toggle('hide',!(MP.role==='guest'&&MP.roster.length===0));$('mp-start').disabled=!(MP.role==='host'&&MP.roster.length>=2&&!MP.started)}
 function mpUniqName(n){const key=x=>String(x).normalize('NFKC').toLowerCase(),base=n||'プレイヤー',has=x=>MP.roster.some(p=>key(p.name)===key(x));if(!has(base))return base;for(let k=2;k<10;k++){const sf=String(k),c=Array.from(base).slice(0,8-sf.length).join('')+sf;if(!has(c))return c}return base}
 function mpSendAll(o){const s=JSON.stringify(o);Object.values(MP.peers).forEach(p=>{if(p.dc&&p.dc.readyState==='open')p.dc.send(s)})}
 function mpBroadcastRoster(){mpDraw();mpPrune();mpSendAll({k:'roster',r:MP.roster})}
 function mpHostWire(dc,pc,slot){dc.onmessage=e=>{let m;try{m=JSON.parse(e.data)}catch(_){return}if(slot.id)(MP.rx=MP.rx||{})[slot.id]=performance.now();
- if(m.k==='hi'){if(slot.id)return;if(MP.started){dc.send(JSON.stringify({k:'busy'}));return}if(MP.roster.length>=4){dc.send(JSON.stringify({k:'full'}));return}let id=1;while(MP.roster.some(p=>p.id===id))id++;const name=mpUniqName(mpClip(m.n));let c=0;while(MP.roster.some(p=>p.c===c))c++;MP.roster.push({id,name,c,ping:null});MP.peers[id]={dc,pc};slot.id=id;if(MP.pend&&MP.pend.pc===pc)MP.pend=null;dc.send(JSON.stringify({k:'welcome',id,r:MP.roster}));mpBroadcastRoster();mpSay(name+'が参加しました');$('mp-out').value='';$('mp-in').value=''}
+ if(m.k==='hi'){if(slot.id)return;if(MP.started){dc.send(JSON.stringify({k:'busy'}));return}if(MP.roster.length>=4){dc.send(JSON.stringify({k:'full'}));return}let id=1;while(MP.roster.some(p=>p.id===id))id++;const name=mpUniqName(mpClip(m.n));let c=Number.isInteger(m.c)&&m.c>=0&&m.c<4?m.c:-1;if(c<0||MP.roster.some(p=>p.c===c)){c=0;while(MP.roster.some(p=>p.c===c))c++}MP.roster.push({id,name,c,ping:null});MP.peers[id]={dc,pc};slot.id=id;if(MP.pend&&MP.pend.pc===pc)MP.pend=null;dc.send(JSON.stringify({k:'welcome',id,r:MP.roster}));mpBroadcastRoster();mpSay(name+'が参加しました');$('mp-out').value='';$('mp-in').value=''}
  else if(m.k==='q'&&slot.id){const p=MP.roster.find(x=>x.id===slot.id);if(p)p.ping=Math.round(performance.now()-m.t)}
  else if(m.k==='cl'&&slot.id)mpHostClaim(slot.id,m.t,m.i)
  else if(m.k==='ev'&&slot.id&&typeof m.t==='string')mpHostEv(slot.id,m)
@@ -900,7 +913,7 @@ async function mpAccept(){const p=MP.pend;if(!p){mpSay('先に「参加者を追
  try{const m=mpDec($('mp-in').value);if(m.k!=='a')throw new Error('返信コードではありません');await p.pc.setRemoteDescription(m.d);mpSay('接続中…')}catch(e){mpSay('接続できません: '+e.message)}}
 async function mpGuestMake(){try{const m=mpDec($('mp-in').value);if(m.k!=='o')throw new Error('ホストのコードではありません');
  if(MP.hostPc){try{MP.hostPc.close()}catch(_){}}
- const pc=mpPc();MP.hostPc=pc;pc.ondatachannel=e=>{const dc=e.channel;MP.hostDc=dc;let hiSent=false;dc.onopen=()=>{if(hiSent)return;hiSent=true;dc.send(JSON.stringify({k:'hi',n:mpName()}))};dc.onmessage=mpGuestMsg;dc.onclose=mpGuestLost;if(dc.readyState==='open')dc.onopen()};
+ const pc=mpPc();MP.hostPc=pc;pc.ondatachannel=e=>{const dc=e.channel;MP.hostDc=dc;let hiSent=false;dc.onopen=()=>{if(hiSent)return;hiSent=true;dc.send(JSON.stringify({k:'hi',n:mpName(),c:mpPref()}))};dc.onmessage=mpGuestMsg;dc.onclose=mpGuestLost;if(dc.readyState==='open')dc.onopen()};
  await pc.setRemoteDescription(m.d);await pc.setLocalDescription(await pc.createAnswer());await mpIce(pc);$('mp-out').value=mpEnc({k:'a',d:pc.localDescription});mpSay('返信コードをコピーしてホストに渡してください。接続されると自動で部屋が表示されます')}catch(e){mpSay('失敗しました: '+e.message)}}
 function mpGuestMsg(e){let m;try{m=JSON.parse(e.data)}catch(_){return}MP.hrx=performance.now();
  if(m.k==='welcome'){MP.id=m.id;MP.roster=m.r;MP.started=false;mpDraw();mpSay('参加しました。ホストの開始を待っています')}
@@ -922,9 +935,11 @@ function mpGuestLost(){if(MP.role==='guest'&&!MP.leaving){if(!MP.fin)mpLeave('�
 const mpSize=n=>{const v=Math.round(17*Math.sqrt(n));return v%2?v:v+1};
 // ---- Phase 3: pickups & exit sync ----
 const GR={
- r:(o,m,by)=>{got++;eSpeed=2+got*.18;$('rel').textContent=got;chime();if(m&&o.userData.risky)risk();
-  if(got===NEED){say('出口の封印が解けた。赤い光へ走れ',5000);world.userData.exit.material.emissive.set(0x20ff60);world.userData.el.color.set(0x30ff60)}
-  else say((m?'':mpNm(by)+'が')+IN()+'を手に入れた ('+got+'/'+NEED+')'+(m?'  — 何かが目を覚ます':''),3500);alertE=true;if(m)mpEv({t:'rl'});stage()},
+ r:(o,m,by)=>{got++;eSpeed=2+got*.18;$('rel').textContent=got;chime();let rk='';if(m&&o.userData.risky)rk=risk();
+  if(got===NEED){say('出口の封印が解けた。赤い光へ走れ'+(rk?'（'+rk+'）':''),5000);world.userData.exit.material.emissive.set(0x20ff60);world.userData.el.color.set(0x30ff60)}
+  else say((m?'':mpNm(by)+'が')+IN()+'を手に入れた ('+got+'/'+NEED+')'+(m?'  — '+(rk||'何かが目を覚ます'):''),4500);alertE=true;if(m)mpEv({t:'rl'});stage()},
+ v:()=>{takeVault()},
+ n:()=>{readNote(stg)},
  m:()=>{mapHave=true;setMap(true);showCard();chime();say('地図を手に入れた（Nキーか持ち物から開閉）— 歩いた場所が書き込まれていく',4200)},
  o:()=>{orb=1;showCard();chime();say('水晶玉を手に入れた（Tで使う）— 使うと「それ」の動きが一定時間止まる',4200)},
  c:()=>{crk=Math.min(3,crk+1);showCard();tone(700,0,.1,.1,'triangle',900,.2);say('爆竹を拾った（Gで投げる）',2200)},
@@ -984,7 +999,7 @@ function mpHostEv(by,o){if(!MP.inGame||!MP.enemies)return;const p=MP.pl[by],EN=M
  else if(o.t==='cr'&&isFinite(x)&&isFinite(z))MP.crk={x,z,t:25};
  else if(o.t==='orb'&&MP.freeze<=0){MP.freeze=8;EN.forEach(en=>en.act=null)}
  else if(o.t==='mir'){EN.forEach(en=>{if(en.tp===by&&en.mode==='chase'){en.mode='wander';en.target=null;en.act=null}en.aw[by]=0});p.hideT=0}
- else if(o.t==='al'){EN.forEach(en=>{en.mode='chase';en.tp=by;en.lost=0;en.act=null;en.aw[by]=1});mpToP(by,{k:'sg'})}
+ else if(o.t==='al'){EN.forEach(en=>{en.mode='chase';en.tp=by;en.lost=0;en.act=null;en.aw[by]=1;en.alT=10});mpToP(by,{k:'sg'})}
  else if(o.t==='rl'){EN.forEach(en=>{if(Math.hypot(en.x-p.x,en.z-p.z)<16&&en.mode!=='chase'){en.aw[by]=Math.max(en.aw[by]||0,.6);en.target=[cellOf(p.x),cellOf(p.z)]}})}
  else if(o.t==='sv'&&p.capT>0){p.capT=0;p.imm=3;const en=EN[o.e|0];if(en){let c,t=0;do{c=free();t++}while(t<60&&Math.hypot(c[0]*CS-p.x,c[1]*CS-p.z)<30);en.x=c[0]*CS;en.z=c[1]*CS;en.mode='wander';en.target=[c[0],c[1]];en.act=null;en.aw={};en.bk=''}}
  else if(o.t==='dd'&&p.capT>0)mpHostDead(by)}
@@ -1018,7 +1033,7 @@ function mpAI(dt){if(!MP.inGame||MP.role!=='host'||!MP.enemies)return;
    if(!en.target){const r=al[Math.random()*al.length|0];en.target=got>=NEED-1&&Math.random()<.6?mpNearCell(r):free()}
    tc=en.act?ec:en.target}
   const bk=ec[0]+','+ec[1]+'>'+tc[0]+','+tc[1];if(bk!==en.bk){en.bk=bk;en.br=bfs(ec,tc)}
-  const nx=en.br,px=nx[0]*CS,pz=nx[1]*CS,spd=(fz?0:(en.mode==='chase'?(got>=NEED?4.3:3.4+got*.1):(en.act?0:eSpeed))*DF.s*(1+(stg-1)*.07)),d2=Math.hypot(px-en.x,pz-en.z);
+  if(en.alT>0)en.alT-=dt;const nx=en.br,px=nx[0]*CS,pz=nx[1]*CS,spd=(fz?0:(en.mode==='chase'?(got>=NEED?4.3:3.4+got*.1):(en.act?0:eSpeed))*DF.s*(1+(stg-1)*.07)*(en.alT>0?1.25:1)),d2=Math.hypot(px-en.x,pz-en.z);
   if(d2>.05){const ta=Math.atan2(px-en.x,pz-en.z);en.head+=(((ta-en.head+Math.PI*3)%(Math.PI*2))-Math.PI)*Math.min(1,dt*6);en.x+=(px-en.x)/d2*Math.min(spd*dt,d2);en.z+=(pz-en.z)/d2*Math.min(spd*dt,d2)}
   en.spd=spd;
   for(const p of al)if(!fz&&!(p.hid&&!p.seenH)&&Math.hypot(en.x-p.x,en.z-p.z)<1.1)mpCapture(p,ei)});
@@ -1060,7 +1075,8 @@ function mpMakeAv(p){const col=AVC[mpCI(p.id)%4],G=new THREE.Group();
 function mpSpawnAvatars(){MP.rx={};MP.hrx=0;MP.phT=null;mpPhClear();MP.av={};MP.snap={};MP.tt=0;MP.en=[];MP.enM=[];MP.fz=false;MP.dead={};MP.crk=null;MP.freeze=0;MP.enemies=null;MP.pl={};MP.out={};MP.gone={};MP.fin=null;MP.spec=null;MP.specLb='';MP.specK='';MP.nm={};MP.cm={};
  MP.roster.forEach(r=>{MP.nm[r.id]=r.name;MP.cm[r.id]=mpCI(r.id);MP.pl[r.id]={id:r.id,x:0,z:0,yaw:0,on:true,hid:false,cr:false,mov:false,spr:false,ghost:false,seenH:false,hideT:0,imm:0,capT:0,prevHid:false}});
  if(MP.role==='host')mpSpawnEnemies()}
-function mpApply(a){if(!MP.inGame||!world)return;for(const q of a){const id=q[0];if(id===MP.id)continue;const p=MP.roster.find(r=>r.id===id);if(!p)continue;let v=MP.av[id];if(!v)v=MP.av[id]=mpMakeAv(p);const u=v.userData;u.tx=q[1];u.tz=q[2];u.ty=q[3];u.on=!!(q[4]&1);u.hid=!!(q[4]&2);u.cr=!!(q[4]&4);u.dead=!!(q[4]&128);if(!u.init){u.init=true;v.position.set(q[1],0,q[2])}}}
+function mpFoot(dt){if(!AC)return;const R=16,cy=Math.cos(P.yaw),sy=Math.sin(P.yaw);for(const id in MP.av){const v=MP.av[id],u=v.userData;if(!u.mov||u.cr||u.hid||u.dead||!u.init||MP.dead[id]||MP.esc[id]){u.fT=0;continue}const dx=v.position.x-P.x,dz=v.position.z-P.z,d=Math.hypot(dx,dz);if(d>R)continue;u.fT=(u.fT||0)-dt*(u.spr?1.8:1);if(u.fT>0)continue;u.fT=.5;const g=Math.pow(1-d/R,1.6),pan=Math.max(-1,Math.min(1,(dx*cy-dz*sy)/Math.max(d,.5))),sp=u.spr,fr=300+520*g;burst(sp?.16:.22,(sp?.5:.3)*g*1.4,fr,pan,.35);tone(sp?90:75,0,.12,(sp?.2:.12)*g,'sine',48,.1);if(stg===4)burst(sp?.16:.22,(sp?.5:.3)*g*.6,fr*.8,pan*.6,.4,.32);if(stg===2)burst(.14,.22*g,2000,pan,.6)}}
+function mpApply(a){if(!MP.inGame||!world)return;for(const q of a){const id=q[0];if(id===MP.id)continue;const p=MP.roster.find(r=>r.id===id);if(!p)continue;let v=MP.av[id];if(!v)v=MP.av[id]=mpMakeAv(p);const u=v.userData;u.tx=q[1];u.tz=q[2];u.ty=q[3];u.on=!!(q[4]&1);u.hid=!!(q[4]&2);u.cr=!!(q[4]&4);u.mov=!!(q[4]&8);u.spr=!!(q[4]&16);u.dead=!!(q[4]&128);if(!u.init){u.init=true;v.position.set(q[1],0,q[2])}}}
 function mpPrune(){if(!MP.inGame)return;for(const id in MP.av)if(!MP.roster.some(r=>r.id===+id)){const v=MP.av[id];say(v.userData.name+'との接続が切れた',3000);if(v.parent){disposeWorld(v);v.parent.remove(v)}delete MP.av[id]}for(const id in MP.snap)if(!MP.roster.some(r=>r.id===+id))delete MP.snap[id];for(const id in MP.pl)if(!MP.roster.some(r=>r.id===+id))delete MP.pl[id]}
 function mpTick(dt){if(!MP.inGame||!world)return;mpPhUpdate(dt);MP.tt+=dt;const host=MP.role==='host';
  if(host){mpAI(dt);mpCheckEnd();if(!MP.fin)mpPhHost(dt);const nw=performance.now(),rx=MP.rx=MP.rx||{};if(!MP.fin)for(const id of Object.keys(MP.peers)){if(!rx[id])rx[id]=nw;else if(nw-rx[id]>MP_TIMEOUT){delete rx[id];mpHostLeft({id:+id},MP.peers[id].pc)}}}else if(MP.role==='guest'&&!MP.fin){const nw=performance.now();if(!MP.hrx)MP.hrx=nw;else if(nw-MP.hrx>MP_TIMEOUT){MP.hrx=0;mpGuestLost()}}
@@ -1074,6 +1090,7 @@ function mpTick(dt){if(!MP.inGame||!world)return;mpPhUpdate(dt);MP.tt+=dt;const 
   else if(MP.hostDc&&MP.hostDc.readyState==='open')MP.hostDc.send(JSON.stringify({k:'pos',a:me}))}
  const k=Math.min(1,dt*12);
  for(const id in MP.av){const v=MP.av[id],u=v.userData;v.position.x+=(u.tx-v.position.x)*k;v.position.z+=(u.tz-v.position.z)*k;v.rotation.y+=(((u.ty+Math.PI-v.rotation.y+Math.PI*3)%(Math.PI*2))-Math.PI)*k;v.visible=!u.hid&&!u.dead&&!MP.dead[id]&&!MP.esc[id];u.lamp.intensity=u.on?.9:0;v.scale.y+=((u.cr?.7:1)-v.scale.y)*k}
+ if(state==='play')mpFoot(dt);
  if(state==='spec'&&MP.spec!=null&&MP.av[MP.spec]){const sv=MP.av[MP.spec];sv.visible=false;sv.userData.lamp.intensity=0}
  for(let i=0;i<MP.enM.length;i++){const g=MP.enM[i],u=g.userData;if(!u.init)continue;g.position.x+=(u.tx-g.position.x)*k;g.position.z+=(u.tz-g.position.z)*k;g.rotation.y+=(((u.th-g.rotation.y+Math.PI*3)%(Math.PI*2))-Math.PI)*k;g.children[0].rotation.z=Math.sin(T*3+i)*.05;g.position.y=MP.fz?0:Math.abs(Math.sin(T*6+i))*.04;const lt=u.lt||(u.lt=g.children.find(c=>c.isLight));if(lt)lt.intensity=.3+Math.random()*.4}}
 function mpBegin(o){recMp('m');MP.rmGone=0;MP.taken={};MP.esc={};MP.started=true;MP.inGame=true;MP.seed=o.seed>>>0;MP.roster=o.r;PN=o.n;MP.snap={};MP.av={};MP.tt=0;
@@ -1083,7 +1100,7 @@ function mpBegin(o){recMp('m');MP.rmGone=0;MP.taken={};MP.esc={};MP.started=true
  stg=o.stg;total=0;totN=0;totU=0;retries=0;runStart=performance.now();start(false);showTouch();lockPtr()}
 function mpEnd(msg){if(!MP.inGame)return;MP.inGame=false;PN=1;MP.av={};MP.snap={};if(MP.role)mpLeave(msg||'')}
 function mpRole(r){MP.role=r;const h=r==='host';$('mp-v-room').classList.toggle('host',h);document.querySelectorAll('.mp-h').forEach(e=>e.classList.toggle('hide',!h));$('mp-l-in').textContent=h?'ゲストの返信コード':'ホストのコード';$('mp-l-out').textContent=h?'ゲストに渡すコード':'ホストに渡す返信コード';$('mp-act').textContent=h?'接続':'返信コードを作る';$('mp-back').textContent='部屋を出る';mpView('room');mpDraw()}
-function mpHost(){MP.id=0;MP.roster=[{id:0,name:mpName(),c:0,ping:null}];MP.started=false;mpRole('host');mpSay('部屋コードを作成中…');mpOpenRoom();clearInterval(MP.iv);MP.iv=setInterval(()=>{if(MP.role==='host'&&Object.keys(MP.peers).length){mpSendAll({k:'p',t:performance.now()});mpBroadcastRoster()}},3000)}
+function mpHost(){MP.id=0;MP.roster=[{id:0,name:mpName(),c:Math.max(0,mpPref()),ping:null}];MP.started=false;mpRole('host');mpSay('部屋コードを作成中…');mpOpenRoom();clearInterval(MP.iv);MP.iv=setInterval(()=>{if(MP.role==='host'&&Object.keys(MP.peers).length){mpSendAll({k:'p',t:performance.now()});mpBroadcastRoster()}},3000)}
 function mpJoin(){MP.id=-1;MP.roster=[];MP.started=false;mpRole('guest');mpSay('ホストの部屋コードを入力して「入室」を押してください')}
 function mpLeave(msg){const wasIn=MP.inGame;MP.leaving=true;clearInterval(MP.iv);Object.values(MP.peers).forEach(p=>{try{p.dc.send(JSON.stringify({k:'bye'}))}catch(_){}setTimeout(()=>{try{p.pc.close()}catch(_){}},200)});[MP.pend&&MP.pend.pc,MP.hostPc].forEach(pc=>{if(pc)try{pc.close()}catch(_){}});MP.rt=(MP.rt||0)+1;{const hp=MP.peer;MP.peer=null;if(hp)setTimeout(()=>{try{hp.destroy()}catch(_){}},400)}$('mp-rcode').textContent='――';$('mp-v-room').classList.remove('man');$('mp-man').textContent='手動で接続（予備）';MP.role=null;MP.fin=null;MP.spec=null;MP.id=-1;MP.peers={};MP.roster=[];MP.pend=null;MP.hostDc=null;MP.hostPc=null;MP.started=false;$('mp-out').value='';$('mp-in').value='';$('mp-back').textContent='戻る';mpView('menu');mpSay(msg||'');MP.leaving=false;if(wasIn){MP.inGame=false;PN=1;MP.av={};MP.snap={};toTitle();say(msg||'マルチプレイを終了しました',4000)}}
 $('mpb').addEventListener('click',()=>{$('start').classList.add('hide');$('mpscr').classList.remove('hide');mpView('menu');const ok=typeof RTCPeerConnection!=='undefined';$('mp-host').disabled=$('mp-join').disabled=!ok;mpSay(ok?'':'このブラウザは対応していません（WebRTCが使えません）')});
@@ -1141,12 +1158,14 @@ function loop(now){requestAnimationFrame(loop);const dt=Math.min((now-last)/1000
   crks.forEach((o,i)=>{if(!o.visible)return;if(crk<3&&Math.hypot(o.position.x-P.x,o.position.z-P.z)<1.3)pick('c',i,o)});
   mirrors.forEach((o,i)=>{if(!o.visible)return;o.rotation.y+=dt*1.2;if(mir<1&&Math.hypot(o.position.x-P.x,o.position.z-P.z)<1.4)pick('i',i,o)});
   cards.forEach((o,i)=>{if(!o.visible)return;o.rotation.y+=dt*1.5;if(!card&&Math.hypot(o.position.x-P.x,o.position.z-P.z)<1.4)pick('k',i,o)});
+  vaults.forEach((o,i)=>{if(!o.visible)return;o.rotation.y+=dt*.8;o.position.y=1.2+Math.sin(T*1.5)*.08;if(Math.hypot(o.position.x-P.x,o.position.z-P.z)<1.4)pick('v',i,o)});
+  notes.forEach((o,i)=>{if(!o.visible)return;o.rotation.y+=dt;o.position.y=1+Math.sin(T*2+2)*.05;if(Math.hypot(o.position.x-P.x,o.position.z-P.z)<1.3)pick('n',i,o)});
   pebs.forEach((o,i)=>{if(o.visible&&stones<9&&Math.hypot(o.position.x-P.x,o.position.z-P.z)<1.3)pick('s',i,o)});
   bats.forEach((o,i)=>{if(o.visible&&Math.hypot(o.position.x-P.x,o.position.z-P.z)<1.3)pick('b',i,o)});
   const ex=world.userData.exit;if(Math.hypot(ex.position.x-P.x,ex.position.z-P.z)<2){if(got>=NEED)win();else say('封印されている',1500)}
   // entity AI
   if(MP.inGame)mpNear();let spd=0;const dist=Math.hypot(E.x-P.x,E.z-P.z),vr0=(hidden||ghost>0)?0:(P.on?(cr?9:16):(cr?2.5:6)),fv=eMode==='chase'?1:Math.max(Math.hypot(E.x-P.x,E.z-P.z)<2.5?1:0,.25+.75*Math.pow((1+Math.cos(Math.atan2(P.x-E.x,P.z-E.z)-eHead))/2,1.2)),vr=freezeT>0?0:vr0*fv*(got>=NEED-1?1.25:1)*DF.v*(1+(stg-1)*.05)*(1-.4*stm)*szR(),see=dist<vr&&los(E.x,E.z,P.x,P.z),hr=szR()*(eAct&&!eAct.l?1.6:1)*(sprint?14:(moving&&!cr?4.5:0))*(1+wLvl*.8)*(stg===4?1.3:1),hear=!hidden&&ghost<=0&&freezeT<=0&&dist<hr;
-  if(MP.inGame)spd=NEARSPD;if(alertE){alertE=false;if(!MP.inGame&&dist<16&&eMode!=='chase'){aware=Math.max(aware,.6);eTarget=[cellOf(P.x),cellOf(P.z)]}}
+  if(MP.inGame)spd=NEARSPD;if(alarmT>0)alarmT-=dt;if(alertE){alertE=false;if(!MP.inGame&&dist<16&&eMode!=='chase'){aware=Math.max(aware,.6);eTarget=[cellOf(P.x),cellOf(P.z)]}}
   if(!MP.inGame){if(see||hear){const k=see?(1-dist/vr)*2.2+.5:.9;aware=Math.min(1,aware+k*dt);lost=0;if(aware>.35&&eMode!=='chase')eTarget=[cellOf(P.x),cellOf(P.z)]}else aware=Math.max(0,aware-.35*dt);
   if(aware>=1&&eMode!=='chase'){stinger(dist);eMode='chase';lost=0;eAct=null;noticed++}
   if(eMode==='chase'&&!(see||hear)){lost+=dt;if(lost>(hidden?1.5:6*szR())){escOk(hidden);eMode='wander';eTarget=null;aware=0}}}
@@ -1160,7 +1179,7 @@ function loop(now){requestAnimationFrame(loop);const dt=Math.min((now-last)/1000
   if(eMode==='chase')tc=[cellOf(P.x),cellOf(P.z)];else{
    if(eAct){tc=ec;eAct.t-=dt;if(!eAct.l)eHead+=dt*(eAct.t%2<1?.9:-.9);if(eAct.t<=0){if(eAct.l&&hidden&&hidePrev.x===eAct.l.cx&&hidePrev.z===eAct.l.cz){if(seenH)die();else say('「それ」がロッカーを開けた…気づかれなかった',2800)}eAct=null;eTarget=null}}
    else{if(eTarget&&ec[0]===eTarget[0]&&ec[1]===eTarget[1])arrive();if(!eTarget)eTarget=got>=NEED-1&&Math.random()<.6?near():free();tc=eAct?ec:eTarget}}
-  const bk=ec[0]+','+ec[1]+'>'+tc[0]+','+tc[1];if(bk!==bfsKey){bfsKey=bk;bfsRes=bfs(ec,tc)}const nx=bfsRes,px=nx[0]*CS,pz=nx[1]*CS;spd=(freezeT>0?0:(eMode==='chase'?(got>=NEED?4.3:3.4+got*.1):(eAct?0:eSpeed))*DF.s*(1+(stg-1)*.07));const d2=Math.hypot(px-E.x,pz-E.z);
+  const bk=ec[0]+','+ec[1]+'>'+tc[0]+','+tc[1];if(bk!==bfsKey){bfsKey=bk;bfsRes=bfs(ec,tc)}const nx=bfsRes,px=nx[0]*CS,pz=nx[1]*CS;spd=(freezeT>0?0:(eMode==='chase'?(got>=NEED?4.3:3.4+got*.1):(eAct?0:eSpeed))*DF.s*(1+(stg-1)*.07)*(alarmT>0?1.25:1));const d2=Math.hypot(px-E.x,pz-E.z);
   if(d2>.05){const ta=Math.atan2(px-E.x,pz-E.z);eHead+=(((ta-eHead+Math.PI*3)%(Math.PI*2))-Math.PI)*Math.min(1,dt*6);E.x+=(px-E.x)/d2*Math.min(spd*dt,d2);E.z+=(pz-E.z)/d2*Math.min(spd*dt,d2)}}
   if(!MP.inGame&&dist<1.1&&freezeT<=0&&!(hidden&&!seenH))die();
   // sensory feedback
@@ -1173,7 +1192,7 @@ function loop(now){requestAnimationFrame(loop);const dt=Math.min((now-last)/1000
   eStepT-=dt*(spd/3);if(eStepT<=0&&dist<24){eStepT=.62;const pan=((E.x-P.x)*Math.cos(P.yaw)-(E.z-P.z)*Math.sin(P.yaw))/Math.max(dist,.1),vv=Math.max(0,1-dist/24);burst(.22,.9*vv*vv+.02,380,pan,.45);tone(70,0,.3,.7*vv*vv,'sine',38,.3);if(stg===4)burst(.22,.4*vv*vv,300,-pan,.45,.4)}
   if(Math.random()<dt*[.12,.45,.15,.2,.14][stg-1])ambEvent()
   const fl=P.bat<20?Math.random()<.35:((dist<8&&Math.random()<danger*.4)||(got>=3&&Math.random()<.015*got));
-  spot.intensity=P.on?(fl||(boK>.05&&boK<.95&&Math.random()<.5)?.3:2.4*(stg===4?.6+.15*Math.sin(T*.4):1)):0;fill.intensity=(P.on?.35:.14)*(1-.8*boK);
+  if(OPT.torch!=='def')spot.color.set(TORCH[OPT.torch]);spot.intensity=P.on?(fl||(boK>.05&&boK<.95&&Math.random()<.5)?.3:2.4*(stg===4?.6+.15*Math.sin(T*.4):1)):0;fill.intensity=(P.on?.35:.14)*(1-.8*boK);
   $('bat').style.width=P.bat+'%';$('sta').style.width=P.sta+'%';renderBar();cullDeco();trackMap();
   $('hint').textContent=hidden?'E 出る':(lockers.some(l=>Math.hypot(l.cx-P.x,l.cz-P.z)<2.2)?'E 隠れる':'');
   camH+=((cr?.95:1.6)-camH)*Math.min(1,dt*8);cam.position.set(P.x,camH+(OPT.bob?Math.sin(P.bob)*.045:0),P.z);cam.rotation.y=P.yaw;cam.rotation.x=P.pitch;
@@ -1184,7 +1203,7 @@ function loop(now){requestAnimationFrame(loop);const dt=Math.min((now-last)/1000
  if(!MP.inGame){ent.position.set(E.x,0,E.z);ent.rotation.y=state==='dead'?Math.atan2(P.x-E.x,P.z-E.z):eHead;ent.children[0].rotation.z=Math.sin(T*3)*.05;ent.position.y=freezeT>0?0:Math.abs(Math.sin(T*6))*.04;
  entLight.intensity=.3+Math.random()*.4}
  mpTick(dt);renderer.render(scene,cam)}
-var alertE=false;
+var alertE=false,alarmT=0;
 requestAnimationFrame(loop);
 })();
 </script></body></html>
